@@ -1,0 +1,6 @@
+@APCleaningBackend_HostAddress = http://localhost:5129
+
+GET {{APCleaningBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
