@@ -32,4 +32,6 @@ public DbSet<APCleaningBackend.Model.Booking> Booking { get; set; } = default!;
 public DbSet<APCleaningBackend.Model.Product> Product { get; set; } = default!;
 
 public DbSet<APCleaningBackend.Model.Notification> Notification { get; set; } = default!;
+
+public DbSet<APCleaningBackend.Model.Contact> Contact { get; set; } = default!;
 }

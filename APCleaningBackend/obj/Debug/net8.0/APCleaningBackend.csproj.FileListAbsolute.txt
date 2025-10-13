@@ -835,3 +835,7 @@ C:\Users\Alwande Ngcobo\Downloads\APCleaningBackend-booking (2)\APCleaningBacken
 C:\Users\Alwande Ngcobo\Downloads\APCleaningBackend-booking (2)\APCleaningBackend-booking\APCleaningBackend-booking\APCleaningBackend\obj\Debug\net8.0\APCleaningBackend.pdb
 C:\Users\Alwande Ngcobo\Downloads\APCleaningBackend-booking (2)\APCleaningBackend-booking\APCleaningBackend-booking\APCleaningBackend\obj\Debug\net8.0\APCleaningBackend.genruntimeconfig.cache
 C:\Users\Alwande Ngcobo\Downloads\APCleaningBackend-booking (2)\APCleaningBackend-booking\APCleaningBackend-booking\APCleaningBackend\obj\Debug\net8.0\ref\APCleaningBackend.dll
+C:\Users\Alwande Ngcobo\Downloads\APCleaningBackend-booking (2)\APCleaningBackend-booking\APCleaningBackend-booking\APCleaningBackend\obj\Debug\net8.0\APCleaningBackend.sourcelink.json
+C:\Users\Alwande Ngcobo\Downloads\APCleaningBackend-booking (2)\APCleaningBackend-booking\APCleaningBackend-booking\APCleaningBackend\bin\Debug\net8.0\Microsoft.AspNetCore.WebUtilities.dll
+C:\Users\Alwande Ngcobo\Downloads\APCleaningBackend-booking (2)\APCleaningBackend-booking\APCleaningBackend-booking\APCleaningBackend\bin\Debug\net8.0\Microsoft.Net.Http.Headers.dll
+C:\Users\Alwande Ngcobo\Downloads\APCleaningBackend-booking (2)\APCleaningBackend-booking\APCleaningBackend-booking\APCleaningBackend\bin\Debug\net8.0\Resend.dll

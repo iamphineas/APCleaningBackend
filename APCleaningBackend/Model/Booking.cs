@@ -61,5 +61,16 @@ namespace APCleaningBackend.Model
         public string BookingStatus { get; set; } = "Pending";
         public string PaymentStatus { get; set; } = "Pending";
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        public string Address { get; set; }
+
+        [Required]
+        public string ZipCode { get; set; }
+        public string City { get; set; }
+        public string Province { get; set; } = "Durban";
+        public string FullName { get; set; }
+        public string Email { get; set; }
+
     }
 }

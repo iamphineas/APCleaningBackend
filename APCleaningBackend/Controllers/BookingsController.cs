@@ -13,6 +13,7 @@ using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
+using Resend;
 
 namespace APCleaningBackend.Controllers
 {
@@ -34,7 +35,30 @@ namespace APCleaningBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Booking>>> GetBookings()
         {
-            return await _context.Booking.ToListAsync();
+            var bookings = await _context.Booking
+                .Include(b => b.ServiceType)
+                .Select(b => new {
+                    b.BookingID,
+                    b.CustomerID,
+            b.FullName,
+            b.Email,
+            b.Address,
+            b.City,
+            b.Province,
+            b.ServiceDate,
+            b.ServiceStartTime,
+            b.ServiceEndTime,
+            b.BookingAmount,
+            b.BookingStatus,
+            b.PaymentStatus,
+            b.AssignedCleanerID,
+            b.AssignedDriverID,
+            ServiceTypeName = b.ServiceType.Name
+        })
+        .ToListAsync();
+
+            return Ok(bookings);
+
         }
 
         // GET: api/DriverDetails/5
@@ -94,7 +118,12 @@ namespace APCleaningBackend.Controllers
                 ServiceStartTime = model.ServiceStartTime,
                 ServiceEndTime = model.ServiceEndTime,
                 BookingAmount = model.BookingAmount,
-                CreatedDate = model.CreatedDate
+                CreatedDate = model.CreatedDate,
+                FullName = model.FullName,
+                Email = model.Email,
+                Address = model.Address,
+                City = model.City,
+                ZipCode = model.ZipCode
             };
 
 
@@ -151,14 +180,57 @@ namespace APCleaningBackend.Controllers
             var form = await Request.ReadFormAsync();
             var paymentStatus = form["payment_status"];
             var bookingId = form["item_name"].ToString().Split('#')[1];
+            IResend resend = ResendClient.Create("re_hDCpQ1jh_LQhD8pcwuhwrJUvAPzhAUpKd");
 
-            var booking = await _context.Booking.FindAsync(int.Parse(bookingId));
+            var booking = await _context.Booking
+                .Include(b => b.ServiceType)
+                .FirstOrDefaultAsync(b => b.BookingID == int.Parse(bookingId));
 
             if (booking != null)
             {
                 if (paymentStatus == "COMPLETE")
                 {
                     booking.PaymentStatus = "Paid";
+
+                    var resp = await resend.EmailSendAsync(new EmailMessage()
+                    {
+                        From = "onboarding@resend.dev",
+                        To = "alwandengcobo3@gmail.com",
+                        Subject = "Hello World",
+                        HtmlBody = "<!DOCTYPE html>\n" +
+                        "<html>\n" +
+                        "<head>\n" +
+                        "  <meta charset=\"UTF-8\">\n" +
+                        "  <title>Booking Invoice</title>\n" +
+                        "  <style>\n" +
+                        "    body { font-family: Arial, sans-serif; color: #333; padding: 20px; }\n" +
+                        "    .header { text-align: center; margin-bottom: 30px; }\n" +
+                        "    .header h1 { margin: 0; color: #392C3A; }\n" +
+                        "    .details, .summary { margin-bottom: 20px; }\n" +
+                        "    .details td, .summary td { padding: 5px 10px; }\n" +
+                        "    .summary { border-top: 1px solid #ccc; }\n" +
+                        "    .total { font-weight: bold; font-size: 1.2em; }\n" +
+                        "  </style>\n</head>\n<body>\n  <div class=\"header\">\n" +
+                        "    <h1>AP Cleaning Services</h1>\n" +
+                        "    <p>Booking Confirmation & Invoice</p>\n" +
+                        "  </div>\n\n  <table class=\"details\">\n" +
+                        $"    <tr><td><strong>Invoice</strong></td><td>#{booking.BookingID}</td></tr>\n" +
+                        $"    <tr><td><strong>Date</strong></td><td>{booking.ServiceStartTime}</td></tr>\n" +
+                        $"    <tr><td><strong>Customer</strong></td><td>{booking.FullName}</td></tr>\n" +
+                        $"    <tr><td><strong>Email</strong></td><td>{booking.Email}</td></tr>\n" +
+                        $"    <tr><td><strong>Address</strong></td><td>{booking.Address}, {booking.City}, {booking.Province}</td></tr>\n" +
+                        "  </table>\n\n" +
+                        "  <table class=\"summary\">\n" +
+                        $"    <tr><td><strong>Service Type</strong></td><td>{booking.ServiceType.Name}</td></tr>\n" +
+                        $"    <tr><td><strong>Start Time</strong></td><td>{booking.ServiceStartTime}</td></tr>\n" +
+                        $"    <tr><td><strong>End Time</strong></td><td>{booking.ServiceEndTime}</td></tr>\n" +
+                        $"    <tr><td class=\"total\"><strong>Total Amount</strong></td><td class=\"total\">R{booking.BookingAmount}</td></tr>\n" +
+                        "  </table>\n\n" +
+                        "  <p>Thank you for choosing AP Cleaning Services. We look forward to serving you!</p>\n" +
+                        "</body>\n" +
+                        "</html>",
+                    });
+
                     Console.WriteLine($"Booking #{booking.BookingID} marked as Paid.");
                 }
                 else
@@ -173,65 +245,6 @@ namespace APCleaningBackend.Controllers
 
 
             return Ok();
-        }
-
-        [HttpPut("{id}/assign")]
-        public async Task<IActionResult> AssignBooking(int id, [FromBody] BookingAssignmentModel model)
-        {
-            var booking = await _context.Booking.FindAsync(id);
-            if (booking == null)
-                return NotFound();
-
-            // Assign cleaner
-            if (model.CleanerID.HasValue)
-            {
-                booking.AssignedCleanerID = model.CleanerID;
-
-                var cleaner = await _context.CleanerDetails.FindAsync(model.CleanerID.Value);
-                if (cleaner != null)
-                {
-                    cleaner.AvailabilityStatus = "Unavailable";
-
-                    // Notify cleaner
-                    _context.Notification.Add(new Notification
-                    {
-                        UserId = cleaner.UserId,
-                        Message = $"New booking assigned for {booking.ServiceDate:MMM dd}",
-                        CreatedAt = DateTime.UtcNow,
-                        IsRead = false
-                    });
-                }
-            }
-
-            // Assign driver
-            if (model.DriverID.HasValue)
-            {
-                booking.AssignedDriverID = model.DriverID;
-
-                var driver = await _context.DriverDetails.FindAsync(model.DriverID.Value);
-                if (driver != null)
-                {
-                    driver.AvailabilityStatus = "Unavailable";
-
-                    // Notify driver
-                    _context.Notification.Add(new Notification
-                    {
-                        UserId = driver.UserId,
-                        Message = $"New pickup assigned for {booking.ServiceDate:MMM dd}",
-                        CreatedAt = DateTime.UtcNow,
-                        IsRead = false
-                    });
-                }
-            }
-
-            // Set booking status
-            if (booking.AssignedCleanerID.HasValue && booking.AssignedDriverID.HasValue)
-            {
-                booking.BookingStatus = "Pending";
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(booking);
         }
 
         [HttpPut("{id}/status")]
@@ -262,49 +275,6 @@ namespace APCleaningBackend.Controllers
 
             await _context.SaveChangesAsync();
             return Ok(booking);
-        }
-
-        [HttpGet("cleaners")]
-        public async Task<ActionResult<IEnumerable<CleanerViewModel>>> GetCleaners()
-        {
-            var cleaners = await (from cd in _context.CleanerDetails
-                                  join user in _context.Users
-                                  on cd.UserId equals user.Id
-                                  join service in _context.ServiceType
-                                  on cd.ServiceTypeID equals service.ServiceTypeID
-                                  select new CleanerViewModel
-                                  {
-                                      CleanerDetailsID = cd.CleanerDetailsID,
-                                      FullName = user.FullName,
-                                      Email = user.Email,
-                                      PhoneNumber = user.PhoneNumber,
-                                      ServiceTypeID = cd.ServiceTypeID,
-                                      ServiceName = service.Name,
-                                      AvailabilityStatus = cd.AvailabilityStatus
-                                  }).ToListAsync();
-
-            return Ok(cleaners);
-        }
-
-        [HttpGet("drivers")]
-        public async Task<IActionResult> GetDrivers()
-        {
-            var drivers = await (from dd in _context.DriverDetails
-                                 join user in _context.Users
-                                 on dd.UserId equals user.Id
-                                 select new DriverViewModel
-                                 {
-                                     DriverDetailsID = dd.DriverDetailsID,
-                                     FullName = user.FullName,
-                                     Email = user.Email,
-                                     PhoneNumber = user.PhoneNumber,
-                                     LicenseNumber = dd.LicenseNumber,
-                                     VehicleType = dd.VehicleType,
-                                     AvailabilityStatus = dd.AvailabilityStatus
-                                 }).ToListAsync();
-
-            return Ok(drivers);
-
         }
 
     }

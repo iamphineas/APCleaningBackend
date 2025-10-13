@@ -40,6 +40,9 @@ namespace APCleaningBackend.Controllers
                     b.ServiceStartTime,
                     b.ServiceEndTime,
                     b.BookingStatus,
+                    b.Address,
+                    b.City,
+                    b.Province,
                     ServiceName = b.ServiceType.Name // Send service name
                 })
                 .ToListAsync();
