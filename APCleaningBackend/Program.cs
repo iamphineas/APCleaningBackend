@@ -6,6 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using APCleaningBackend.Services;
+using Resend;
+using Microsoft.Extensions.Options;
+
 
 namespace APCleaningBackend
 {
@@ -14,6 +18,7 @@ namespace APCleaningBackend
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            var configuration = builder.Configuration;
             var connectionString = builder.Configuration.GetConnectionString("APCleaningBackendContextConnection") ?? throw new InvalidOperationException("Connection string 'APCleaningBackendContextConnection' not found.");
 
             builder.Services.AddDbContext<APCleaningBackendContext>(options => options.UseSqlServer(connectionString));
@@ -59,6 +64,17 @@ namespace APCleaningBackend
                                     .AllowAnyMethod()
                                     .AllowCredentials());
             });
+            builder.Services.AddScoped<IBlobUploader, AzureBlobUploader>();
+            builder.Services.AddScoped<IEmailService, ResendEmailService>();
+            builder.Services.AddHttpClient<ResendClient>();
+            builder.Services.AddTransient<IResend>(sp =>
+            {
+                var options = sp.GetRequiredService<IOptionsSnapshot<ResendClientOptions>>();
+                var httpClient = sp.GetRequiredService<HttpClient>();
+                return new ResendClient(options, httpClient);
+            });
+
+
 
             var app = builder.Build();
             app.UseCors("AllowAPCleaningFrontend");

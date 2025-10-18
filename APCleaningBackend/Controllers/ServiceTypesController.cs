@@ -1,7 +1,7 @@
 ﻿using APCleaningBackend.Areas.Identity.Data;
 using APCleaningBackend.Model;
+using APCleaningBackend.Services;
 using APCleaningBackend.ViewModel;
-using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,12 +12,14 @@ namespace APCleaningBackend.Controllers
     public class ServiceTypesController : ControllerBase
     {
         private readonly APCleaningBackendContext _context;
-        private readonly IConfiguration _config;
+        private readonly IBlobUploader _blobUploader;
+        private readonly string _serviceContainer;
 
-        public ServiceTypesController(APCleaningBackendContext context, IConfiguration config)
+        public ServiceTypesController(APCleaningBackendContext context, IConfiguration config, IBlobUploader blobUploader)
         {
             _context = context;
-            _config = config;
+            _blobUploader = blobUploader;
+            _serviceContainer = config["Azure:ContainerName"];
         }
 
         [HttpGet]
@@ -40,18 +42,7 @@ namespace APCleaningBackend.Controllers
 
             try
             {
-                var connectionString = _config["Azure:StorageConnectionString"];
-                var containerName = _config["Azure:ContainerName"];
-
-                var blobServiceClient = new BlobServiceClient(connectionString);
-                var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-                await containerClient.CreateIfNotExistsAsync();
-
-                uploadedFileName = $"{Guid.NewGuid()}_{model.ServiceImage.FileName}";
-                var blobClient = containerClient.GetBlobClient(uploadedFileName);
-
-                using var stream = model.ServiceImage.OpenReadStream();
-                await blobClient.UploadAsync(stream, overwrite: true);
+                uploadedFileName = await _blobUploader.UploadAsync(model.ServiceImage, _serviceContainer);
             }
             catch (Exception ex)
             {
@@ -86,18 +77,7 @@ namespace APCleaningBackend.Controllers
             {
                 try
                 {
-                    var connectionString = _config["Azure:StorageConnectionString"];
-                    var containerName = _config["Azure:ContainerName"];
-
-                    var blobServiceClient = new BlobServiceClient(connectionString);
-                    var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-                    await containerClient.CreateIfNotExistsAsync();
-
-                    uploadedFileName = $"{Guid.NewGuid()}_{model.ServiceImage.FileName}";
-                    var blobClient = containerClient.GetBlobClient(uploadedFileName);
-
-                    using var stream = model.ServiceImage.OpenReadStream();
-                    await blobClient.UploadAsync(stream, overwrite: true);
+                    uploadedFileName = await _blobUploader.UploadAsync(model.ServiceImage, _serviceContainer);
                 }
                 catch (Exception ex)
                 {
@@ -128,14 +108,7 @@ namespace APCleaningBackend.Controllers
             {
                 try
                 {
-                    var connectionString = _config["Azure:StorageConnectionString"];
-                    var containerName = _config["Azure:ContainerName"];
-
-                    var blobServiceClient = new BlobServiceClient(connectionString);
-                    var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-                    var blobClient = containerClient.GetBlobClient(service.ImageURL);
-
-                    await blobClient.DeleteIfExistsAsync();
+                    await _blobUploader.DeleteAsync(service.ImageURL, _serviceContainer);
                     Console.WriteLine($"Image deleted from Azure: {service.ImageURL}");
                 }
                 catch (Exception ex)

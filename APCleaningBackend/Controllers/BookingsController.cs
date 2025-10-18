@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 using Resend;
+using APCleaningBackend.Services;
 
 namespace APCleaningBackend.Controllers
 {
@@ -23,12 +24,15 @@ namespace APCleaningBackend.Controllers
     {
         private readonly APCleaningBackendContext _context;
         private readonly IConfiguration _config;
+        private readonly IEmailService _emailService;
 
 
-        public BookingsController(APCleaningBackendContext context, IConfiguration config)
+
+        public BookingsController(APCleaningBackendContext context, IConfiguration config, IEmailService emailService)
         {
             _context = context;
             _config = config;
+            _emailService = emailService;
         }
 
         // GET: Booking
@@ -79,20 +83,33 @@ namespace APCleaningBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<Booking>> PostBooking([FromBody] BookingViewModel model)
         {
-            Console.WriteLine("🔍 Incoming booking request");
-            Console.WriteLine($"🔐 IsAuthenticated: {User.Identity.IsAuthenticated}");
-            Console.WriteLine($"🧾 Claims count: {User.Claims.Count()}");
+            Console.WriteLine("Incoming booking request");
+            Console.WriteLine($"IsAuthenticated: {User.Identity.IsAuthenticated}");
+            Console.WriteLine($"Claims count: {User.Claims.Count()}");
 
             foreach (var claim in User.Claims)
             {
-                Console.WriteLine($"🔑 Claim Type: {claim.Type}, Value: {claim.Value}");
+                Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
             }
 
             var userId = User.Identity.IsAuthenticated
     ? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
     : model.CustomerID ?? $"guest-{DateTime.UtcNow.Ticks}";
 
-            Console.WriteLine($"📌 Final CustomerID: {userId}");
+            Console.WriteLine($"Final CustomerID: {userId}");
+
+            string fullName = model.FullName;
+            string email = model.Email;
+
+            if (User.Identity.IsAuthenticated)
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    fullName = user.FullName;
+                    email = user.Email;
+                }
+            }
 
 
 
@@ -119,8 +136,8 @@ namespace APCleaningBackend.Controllers
                 ServiceEndTime = model.ServiceEndTime,
                 BookingAmount = model.BookingAmount,
                 CreatedDate = model.CreatedDate,
-                FullName = model.FullName,
-                Email = model.Email,
+                FullName = fullName,
+                Email = email,
                 Address = model.Address,
                 City = model.City,
                 ZipCode = model.ZipCode
@@ -180,7 +197,7 @@ namespace APCleaningBackend.Controllers
             var form = await Request.ReadFormAsync();
             var paymentStatus = form["payment_status"];
             var bookingId = form["item_name"].ToString().Split('#')[1];
-            IResend resend = ResendClient.Create("re_hDCpQ1jh_LQhD8pcwuhwrJUvAPzhAUpKd");
+            IResend resend = ResendClient.Create(_config["Resend:ApiKey"]);
 
             var booking = await _context.Booking
                 .Include(b => b.ServiceType)
@@ -191,45 +208,10 @@ namespace APCleaningBackend.Controllers
                 if (paymentStatus == "COMPLETE")
                 {
                     booking.PaymentStatus = "Paid";
+                    booking.BookingStatus = "Confirmed";
 
-                    var resp = await resend.EmailSendAsync(new EmailMessage()
-                    {
-                        From = "onboarding@resend.dev",
-                        To = "alwandengcobo3@gmail.com",
-                        Subject = "Hello World",
-                        HtmlBody = "<!DOCTYPE html>\n" +
-                        "<html>\n" +
-                        "<head>\n" +
-                        "  <meta charset=\"UTF-8\">\n" +
-                        "  <title>Booking Invoice</title>\n" +
-                        "  <style>\n" +
-                        "    body { font-family: Arial, sans-serif; color: #333; padding: 20px; }\n" +
-                        "    .header { text-align: center; margin-bottom: 30px; }\n" +
-                        "    .header h1 { margin: 0; color: #392C3A; }\n" +
-                        "    .details, .summary { margin-bottom: 20px; }\n" +
-                        "    .details td, .summary td { padding: 5px 10px; }\n" +
-                        "    .summary { border-top: 1px solid #ccc; }\n" +
-                        "    .total { font-weight: bold; font-size: 1.2em; }\n" +
-                        "  </style>\n</head>\n<body>\n  <div class=\"header\">\n" +
-                        "    <h1>AP Cleaning Services</h1>\n" +
-                        "    <p>Booking Confirmation & Invoice</p>\n" +
-                        "  </div>\n\n  <table class=\"details\">\n" +
-                        $"    <tr><td><strong>Invoice</strong></td><td>#{booking.BookingID}</td></tr>\n" +
-                        $"    <tr><td><strong>Date</strong></td><td>{booking.ServiceStartTime}</td></tr>\n" +
-                        $"    <tr><td><strong>Customer</strong></td><td>{booking.FullName}</td></tr>\n" +
-                        $"    <tr><td><strong>Email</strong></td><td>{booking.Email}</td></tr>\n" +
-                        $"    <tr><td><strong>Address</strong></td><td>{booking.Address}, {booking.City}, {booking.Province}</td></tr>\n" +
-                        "  </table>\n\n" +
-                        "  <table class=\"summary\">\n" +
-                        $"    <tr><td><strong>Service Type</strong></td><td>{booking.ServiceType.Name}</td></tr>\n" +
-                        $"    <tr><td><strong>Start Time</strong></td><td>{booking.ServiceStartTime}</td></tr>\n" +
-                        $"    <tr><td><strong>End Time</strong></td><td>{booking.ServiceEndTime}</td></tr>\n" +
-                        $"    <tr><td class=\"total\"><strong>Total Amount</strong></td><td class=\"total\">R{booking.BookingAmount}</td></tr>\n" +
-                        "  </table>\n\n" +
-                        "  <p>Thank you for choosing AP Cleaning Services. We look forward to serving you!</p>\n" +
-                        "</body>\n" +
-                        "</html>",
-                    });
+                    await _emailService.SendInvoiceAsync(booking);
+
 
                     Console.WriteLine($"Booking #{booking.BookingID} marked as Paid.");
                 }

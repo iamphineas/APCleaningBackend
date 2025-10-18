@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35506.116 d17.12
+VisualStudioVersion = 17.12.35506.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APCleaningBackend", "APCleaningBackend\APCleaningBackend.csproj", "{5218EF5B-7E77-4348-94BC-61155D5A98F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APCleaningBackendTest", "APCleaningBackendTest\APCleaningBackendTest.csproj", "{A7871A1C-21DC-4FA9-BEBB-86F2906B32F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{5218EF5B-7E77-4348-94BC-61155D5A98F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5218EF5B-7E77-4348-94BC-61155D5A98F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5218EF5B-7E77-4348-94BC-61155D5A98F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7871A1C-21DC-4FA9-BEBB-86F2906B32F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7871A1C-21DC-4FA9-BEBB-86F2906B32F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7871A1C-21DC-4FA9-BEBB-86F2906B32F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7871A1C-21DC-4FA9-BEBB-86F2906B32F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

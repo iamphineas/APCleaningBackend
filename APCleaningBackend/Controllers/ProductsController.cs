@@ -4,10 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using APCleaningBackend.Areas.Identity.Data;
 using APCleaningBackend.Model;
+using APCleaningBackend.Services;
 using APCleaningBackend.ViewModel;
-using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace APCleaningBackend.Controllers
@@ -17,15 +16,17 @@ namespace APCleaningBackend.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly APCleaningBackendContext _context;
-        private readonly IConfiguration _config;
+        private readonly IBlobUploader _blobUploader;
+        private readonly string _productContainer;
 
-        public ProductsController(APCleaningBackendContext context, IConfiguration config)
+
+        public ProductsController(APCleaningBackendContext context, IConfiguration config, IBlobUploader blobUploader)
         {
             _context = context;
-            _config = config;
+            _blobUploader = blobUploader;
+            _productContainer = config["Azure:ProductContainer"];
         }
 
-        // GET: Products
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
@@ -48,18 +49,7 @@ namespace APCleaningBackend.Controllers
             {
                 try
                 {
-                    var connectionString = _config["Azure:StorageConnectionString"];
-                    var containerName = _config["Azure:ProductContainer"];
-
-                    var blobServiceClient = new BlobServiceClient(connectionString);
-                    var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-                    await containerClient.CreateIfNotExistsAsync();
-
-                    uploadedFileName = $"{Guid.NewGuid()}_{model.ProductImage.FileName}";
-                    var blobClient = containerClient.GetBlobClient(uploadedFileName);
-
-                    using var stream = model.ProductImage.OpenReadStream();
-                    await blobClient.UploadAsync(stream, overwrite: true);
+                    uploadedFileName = await _blobUploader.UploadAsync(model.ProductImage, _productContainer);
                 }
                 catch (Exception ex)
                 {
@@ -98,18 +88,7 @@ namespace APCleaningBackend.Controllers
             {
                 try
                 {
-                    var connectionString = _config["Azure:StorageConnectionString"];
-                    var containerName = _config["Azure:ProductContainer"];
-
-                    var blobServiceClient = new BlobServiceClient(connectionString);
-                    var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-                    await containerClient.CreateIfNotExistsAsync();
-
-                    uploadedFileName = $"{Guid.NewGuid()}_{model.ProductImage.FileName}";
-                    var blobClient = containerClient.GetBlobClient(uploadedFileName);
-
-                    using var stream = model.ProductImage.OpenReadStream();
-                    await blobClient.UploadAsync(stream, overwrite: true);
+                    uploadedFileName = await _blobUploader.UploadAsync(model.ProductImage, _productContainer);
                 }
                 catch (Exception ex)
                 {
@@ -143,14 +122,7 @@ namespace APCleaningBackend.Controllers
             {
                 try
                 {
-                    var connectionString = _config["Azure:StorageConnectionString"];
-                    var containerName = _config["Azure:ProductContainer"];
-
-                    var blobServiceClient = new BlobServiceClient(connectionString);
-                    var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-                    var blobClient = containerClient.GetBlobClient(product.ProductImageUrl);
-
-                    await blobClient.DeleteIfExistsAsync();
+                    await _blobUploader.DeleteAsync(product.ProductImageUrl, _productContainer);
                     Console.WriteLine($"Image deleted from Azure: {product.ProductImageUrl}");
                 }
                 catch (Exception ex)

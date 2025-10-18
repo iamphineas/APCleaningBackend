@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Resend;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -17,10 +18,12 @@ namespace APCleaningBackend.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
 
+
         public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config)
         {
             _userManager = userManager;
             _config = config;
+
         }
         // GET: AuthController
         [HttpPost("register")]
@@ -94,6 +97,55 @@ namespace APCleaningBackend.Controllers
                 signingCredentials: creds);
 
             return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return BadRequest(new { message = "No account found with that email." });
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var resetLink = $"{_config["Frontend:ResetUrl"]}?email={user.Email}&token={Uri.EscapeDataString(token)}";
+
+            IResend resend = ResendClient.Create(_config["Resend:ApiKey"]);
+
+            var email = new EmailMessage
+            {
+                From = "onboarding@resend.dev",
+                To = "alwandengcobo3@gmail.com",
+                Subject = "Reset Your AP Cleaning Password",
+                HtmlBody = $@"
+            <p>Hello {user.FullName ?? "there"},</p>
+            <p>Click the link below to reset your password:</p>
+            <p><a href='{resetLink}' style='color:#392C3A;'>Reset Password</a></p>
+            <p>If you didn’t request this, you can safely ignore it.</p>"
+            };
+
+            var result = await resend.EmailSendAsync(email);
+
+            if (!result.Success)
+                return StatusCode(500, new { message = "Failed to send email." });
+
+            return Ok(new { message = "Reset link sent successfully." });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return BadRequest(new { message = "Invalid reset request." });
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description);
+                return BadRequest(new { errors });
+            }
+
+            return Ok(new { message = "Password reset successful." });
         }
     }
 }
