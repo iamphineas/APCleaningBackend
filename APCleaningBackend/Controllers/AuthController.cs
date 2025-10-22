@@ -1,8 +1,10 @@
-﻿using APCleaningBackend.Model;
+﻿using APCleaningBackend.Areas.Identity.Data;
+using APCleaningBackend.Model;
 using APCleaningBackend.ViewModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Resend;
 using System.IdentityModel.Tokens.Jwt;
@@ -17,12 +19,14 @@ namespace APCleaningBackend.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
+        private readonly APCleaningBackendContext _context;
 
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config)
+        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config, APCleaningBackendContext context)
         {
             _userManager = userManager;
             _config = config;
+            _context = context;
 
         }
         // GET: AuthController
@@ -146,6 +150,51 @@ namespace APCleaningBackend.Controllers
             }
 
             return Ok(new { message = "Password reset successful." });
+        }
+
+        [HttpPost("updateUser")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserModel model)
+        {
+            var existingUser = await _userManager.FindByIdAsync(model.UserId);
+            if (existingUser == null) throw new Exception("User not found");
+
+            existingUser.UserName = model.FullName;
+            existingUser.Email = model.Email;
+            existingUser.FullName = model.FullName;
+            existingUser.PhoneNumber = model.PhoneNumber;
+
+            var result = await _userManager.UpdateAsync(existingUser);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description);
+                return BadRequest(new { errors });
+            }
+
+
+            return Ok(new { message = "User updated successfully" });
+        }
+
+        [HttpPost("deleteProfile")]
+        public async Task<IActionResult> DeleteProfile([FromBody] DeleteUserModel model)
+        {
+            var existingUser = await _userManager.FindByIdAsync(model.UserId);
+            if (existingUser == null) throw new Exception("User not found");
+
+            var userBookings = await _context.Booking
+                .Where(b => b.CustomerID == model.UserId) 
+                .ToListAsync();
+
+            _context.Booking.RemoveRange(userBookings);
+
+
+            var result = await _userManager.DeleteAsync(existingUser);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description);
+                return BadRequest(new { errors });
+            }
+
+            return Ok(new { message = "User deleted successfully" });
         }
     }
 }

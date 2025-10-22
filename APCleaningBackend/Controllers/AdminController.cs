@@ -73,7 +73,8 @@ namespace APCleaningBackend.Controllers
                     _context.Notification.Add(new Notification
                     {
                         UserId = cleaner.UserId,
-                        Message = $"New booking assigned for {booking.ServiceDate:MMM dd}",
+                        Message = $"New booking assigned for {booking.ServiceDate:MMM dd}\nDriver: {booking.AssignedDriverID}\n" +
+                        $"Location: {booking.Address}, {booking.City}, {booking.Province}\nDate and Time: {booking.ServiceDate} {booking.ServiceStartTime}",
                         CreatedAt = DateTime.UtcNow,
                         IsRead = false
                     });
@@ -94,7 +95,8 @@ namespace APCleaningBackend.Controllers
                     _context.Notification.Add(new Notification
                     {
                         UserId = driver.UserId,
-                        Message = $"New pickup assigned for {booking.ServiceDate:MMM dd}",
+                        Message = $"New pickup assigned for {booking.ServiceDate:MMM dd}\nCleaner: {booking.AssignedCleanerID}\n" +
+                        $"Location: {booking.Address}, {booking.City}, {booking.Province}\nDate and Time: {booking.ServiceDate} {booking.ServiceStartTime}",
                         CreatedAt = DateTime.UtcNow,
                         IsRead = false
                     });

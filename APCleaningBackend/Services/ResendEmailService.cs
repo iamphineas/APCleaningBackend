@@ -60,5 +60,36 @@
 </html>"
             });
         }
+
+        public async Task SendWaitlistConfirmationAsync(string email)
+        {
+            var resend = ResendClient.Create(_config["Resend:ApiKey"]);
+
+            await resend.EmailSendAsync(new EmailMessage
+            {
+                From = "onboarding@resend.dev",
+                To = "alwandengcobo3@gmail.com",
+                Subject = "You're on the waitlist!",
+                HtmlBody = "<p>Thanks for signing up! We'll notify you when our shop launches.</p>"
+            });
+        }
+
+        public async Task SendServiceCompleteToCustomerAsync(Booking booking)
+        {
+            var resend = ResendClient.Create(_config["Resend:ApiKey"]);
+
+            await resend.EmailSendAsync(new EmailMessage
+            {
+                From = "onboarding@resend.dev",
+                To = "alwandengcobo3@gmail.com",
+                Subject = "Your Cleaning Service is Complete!",
+                HtmlBody = $@"
+        <p>Hi there {booking.FullName},</p>
+        <p>Your booking <strong>{booking.BookingID}</strong> for <strong>{booking.ServiceType.Name}</strong> has been completed.</p>
+        <p>We hope your space feels spotless!</p>
+        <p>Thanks for choosing APCleaning!</p>"
+
+            });
+        }
     }
 }

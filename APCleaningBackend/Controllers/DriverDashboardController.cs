@@ -26,16 +26,41 @@ namespace APCleaningBackend.Controllers
 
         // Get bookings assigned to the current driver
         [HttpGet("bookings")]
-        public async Task<ActionResult<IEnumerable<Booking>>> GetAssignedBookings()
+        public async Task<ActionResult<IEnumerable<object>>> GetAssignedBookings()
         {
             var userId = GetUserId();
             var driver = await _context.DriverDetails.FirstOrDefaultAsync(d => d.UserId == userId);
             if (driver == null) return Unauthorized();
 
-            var bookings = await _context.Booking
-                .Where(b => b.AssignedDriverID == driver.DriverDetailsID)
-                .OrderByDescending(b => b.ServiceDate)
-                .ToListAsync();
+            var bookings = await (from b in _context.Booking
+                                  join st in _context.ServiceType
+                                  on b.ServiceTypeID equals st.ServiceTypeID
+
+                                  join cd in _context.CleanerDetails
+                                  on b.AssignedCleanerID equals cd.CleanerDetailsID into cleanerJoin
+                                  from cd in cleanerJoin.DefaultIfEmpty()
+
+                                  join cu in _context.Users
+                                  on cd.UserId equals cu.Id into cleanerUserJoin
+                                  from cu in cleanerUserJoin.DefaultIfEmpty()
+
+                                  where b.AssignedDriverID == driver.DriverDetailsID
+                                  orderby b.ServiceDate descending
+
+                                  select new
+                                  {
+                                      b.BookingID,
+                                      b.ServiceDate,
+                                      b.ServiceStartTime,
+                                      b.ServiceEndTime,
+                                      b.BookingStatus,
+                                      b.Address,
+                                      b.City,
+                                      b.Province,
+                                      ServiceName = st.Name,
+                                      CleanerName = cu.FullName,
+                                      AssignedDriverID = b.AssignedDriverID // ✅ Added for frontend dispatch note
+                                  }).ToListAsync();
 
             return Ok(bookings);
         }
@@ -65,6 +90,7 @@ namespace APCleaningBackend.Controllers
             return Ok(new { status = driver.AvailabilityStatus });
         }
 
+        // Optional: mark driver available directly
         [HttpPut("availability")]
         public async Task<IActionResult> MarkDriverAvailable()
         {
@@ -78,7 +104,7 @@ namespace APCleaningBackend.Controllers
             return Ok(new { message = "Driver marked available" });
         }
 
-        // Optional: driver notifications
+        // Driver notifications
         [HttpGet("notifications")]
         public async Task<IActionResult> GetNotifications()
         {
@@ -101,6 +127,26 @@ namespace APCleaningBackend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok();
+        }
+
+        // Log dispatch note
+        [HttpPost("DispatchNote")]
+        public async Task<IActionResult> LogDispatchNote([FromBody] DispatchNote note)
+        {
+            if (string.IsNullOrWhiteSpace(note.Note))
+                return BadRequest("Note cannot be empty.");
+
+            try
+            {
+                _context.DispatchNotes.Add(note);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Note logged successfully." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error logging dispatch note: " + ex.Message);
+                return StatusCode(500, "Internal server error");
+            }
         }
     }
 }

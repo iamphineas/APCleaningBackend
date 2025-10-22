@@ -5,6 +5,7 @@ using System.Security.Claims;
 using APCleaningBackend.Areas.Identity.Data;
 using APCleaningBackend.Model;
 using APCleaningBackend.ViewModel;
+using APCleaningBackend.Services;
 
 namespace APCleaningBackend.Controllers
 {
@@ -14,38 +15,52 @@ namespace APCleaningBackend.Controllers
     public class CleanerDashboardController : ControllerBase
     {
         private readonly APCleaningBackendContext _context;
+        private readonly IEmailService _emailService;
 
-        public CleanerDashboardController(APCleaningBackendContext context)
+        public CleanerDashboardController(APCleaningBackendContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         [HttpGet("bookings")]
         public async Task<IActionResult> GetAssignedBookings()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             var cleaner = await _context.CleanerDetails
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (cleaner == null) return NotFound("Cleaner profile not found.");
 
-            var bookings = await _context.Booking
-                .Where(b => b.AssignedCleanerID == cleaner.CleanerDetailsID)
-                .Include(b => b.ServiceType) // Include related service
-                .OrderByDescending(b => b.ServiceDate)
-                .Select(b => new
-                {
-                    b.BookingID,
-                    b.ServiceDate,
-                    b.ServiceStartTime,
-                    b.ServiceEndTime,
-                    b.BookingStatus,
-                    b.Address,
-                    b.City,
-                    b.Province,
-                    ServiceName = b.ServiceType.Name // Send service name
-                })
-                .ToListAsync();
+            var bookings = await (from b in _context.Booking
+                                  join st in _context.ServiceType
+                                  on b.ServiceTypeID equals st.ServiceTypeID
+
+                                  join dd in _context.DriverDetails
+                                  on b.AssignedDriverID equals dd.DriverDetailsID into driverJoin
+                                  from dd in driverJoin.DefaultIfEmpty()
+
+                                  join du in _context.Users
+                                  on dd.UserId equals du.Id into driverUserJoin
+                                  from du in driverUserJoin.DefaultIfEmpty()
+
+                                  where b.AssignedCleanerID == cleaner.CleanerDetailsID
+                                  orderby b.ServiceDate descending
+
+                                  select new
+                                  {
+                                      b.BookingID,
+                                      b.ServiceDate,
+                                      b.ServiceStartTime,
+                                      b.ServiceEndTime,
+                                      b.BookingStatus,
+                                      b.Address,
+                                      b.City,
+                                      b.Province,
+                                      ServiceName = st.Name,
+                                      DriverName = du.FullName
+                                  }).ToListAsync();
 
             return Ok(bookings);
         }
@@ -82,7 +97,7 @@ namespace APCleaningBackend.Controllers
             var cleaner = await _context.CleanerDetails.FirstOrDefaultAsync(c => c.UserId == userId);
             if (cleaner == null) return NotFound();
 
-            var booking = await _context.Booking.FindAsync(id);
+            var booking = await _context.Booking.Include(b => b.ServiceType).FirstOrDefaultAsync(b => b.BookingID == id);
             if (booking == null || booking.AssignedCleanerID != cleaner.CleanerDetailsID)
                 return Unauthorized();
 
@@ -99,13 +114,15 @@ namespace APCleaningBackend.Controllers
                 {
                     driver.AvailabilityStatus = "Available";
                 }
+
+                await _emailService.SendServiceCompleteToCustomerAsync(booking);
             }
 
             await _context.SaveChangesAsync();
             return Ok(booking);
         }
 
-        // Optional: Get notifications
+        // Get notifications
         [HttpGet("notifications")]
         public async Task<IActionResult> GetNotifications()
         {
@@ -118,7 +135,7 @@ namespace APCleaningBackend.Controllers
             return Ok(notifications);
         }
 
-        // Optional: Mark notification as read
+        // Mark notification as read
         [HttpPut("notifications/{id}/read")]
         public async Task<IActionResult> MarkNotificationRead(int id)
         {

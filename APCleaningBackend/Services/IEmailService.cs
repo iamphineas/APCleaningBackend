@@ -5,6 +5,8 @@ namespace APCleaningBackend.Services
     public interface IEmailService
     {
         Task SendInvoiceAsync(Booking booking);
+        Task SendWaitlistConfirmationAsync(string email);
+        Task SendServiceCompleteToCustomerAsync(Booking booking);
 
     }
 }

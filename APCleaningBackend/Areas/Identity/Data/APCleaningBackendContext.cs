@@ -34,4 +34,11 @@ public DbSet<APCleaningBackend.Model.Product> Product { get; set; } = default!;
 public DbSet<APCleaningBackend.Model.Notification> Notification { get; set; } = default!;
 
 public DbSet<APCleaningBackend.Model.Contact> Contact { get; set; } = default!;
+
+public DbSet<APCleaningBackend.Model.WaitlistEntry> WaitlistEntry { get; set; } = default!;
+public DbSet<DispatchNote> DispatchNotes { get; set; } = default;
+
+public DbSet<APCleaningBackend.Model.Feedback> Feedback { get; set; } = default!;
+    public DbSet<LoyaltyPoints> LoyaltyPoints { get; set; } = default!;
+
 }

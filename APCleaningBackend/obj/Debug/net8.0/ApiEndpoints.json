@@ -135,6 +135,22 @@
   },
   {
     "ContainingType": "APCleaningBackend.Controllers.AuthController",
+    "Method": "DeleteProfile",
+    "RelativePath": "api/Auth/deleteProfile",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "APCleaningBackend.ViewModel.DeleteUserModel",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.AuthController",
     "Method": "ForgotPassword",
     "RelativePath": "api/Auth/forgot-password",
     "HttpMethod": "POST",
@@ -192,6 +208,22 @@
       {
         "Name": "model",
         "Type": "APCleaningBackend.ViewModel.ResetPasswordModel",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.AuthController",
+    "Method": "UpdateProfile",
+    "RelativePath": "api/Auth/updateUser",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "APCleaningBackend.ViewModel.UpdateUserModel",
         "IsRequired": true
       }
     ],
@@ -626,7 +658,7 @@
     "Parameters": [],
     "ReturnTypes": [
       {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[APCleaningBackend.Model.Booking, APCleaningBackend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[System.Object, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -635,6 +667,22 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.DriverDashboardController",
+    "Method": "LogDispatchNote",
+    "RelativePath": "api/DriverDashboard/DispatchNote",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "note",
+        "Type": "APCleaningBackend.Model.DispatchNote",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "APCleaningBackend.Controllers.DriverDashboardController",
@@ -767,6 +815,80 @@
       {
         "Name": "newPassword",
         "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.FeedbacksController",
+    "Method": "GetFeedbackForCleaner",
+    "RelativePath": "api/Feedbacks/cleaner",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.FeedbacksController",
+    "Method": "SubmitFeedback",
+    "RelativePath": "api/Feedbacks/submit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "input",
+        "Type": "APCleaningBackend.ViewModel.FeedbackInputModel",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.LoyaltyController",
+    "Method": "GetBalance",
+    "RelativePath": "api/Loyalty/balance/{customerId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "customerId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.LoyaltyController",
+    "Method": "EarnPoints",
+    "RelativePath": "api/Loyalty/earn",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "points",
+        "Type": "APCleaningBackend.Model.LoyaltyPoints",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.LoyaltyController",
+    "Method": "RedeemPoints",
+    "RelativePath": "api/Loyalty/redeem",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "points",
+        "Type": "APCleaningBackend.Model.LoyaltyPoints",
         "IsRequired": true
       }
     ],
@@ -1078,6 +1200,84 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.UserDashboardController",
+    "Method": "GetBookingHistory",
+    "RelativePath": "api/UserDashboard/GetBookingHistory",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userID",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[APCleaningBackend.Model.Booking, APCleaningBackend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.UserDashboardController",
+    "Method": "GetUpcomingBookings",
+    "RelativePath": "api/UserDashboard/GetUpcomingBookings",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userID",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[APCleaningBackend.Model.Booking, APCleaningBackend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.WaitlistEntriesController",
+    "Method": "SubmitEmail",
+    "RelativePath": "api/WaitlistEntries",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "entry",
+        "Type": "APCleaningBackend.Model.WaitlistEntry",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.WaitlistEntriesController",
+    "Method": "GetWaitlist",
+    "RelativePath": "api/WaitlistEntries",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   }
 ]
