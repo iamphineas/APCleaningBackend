@@ -135,6 +135,38 @@
   },
   {
     "ContainingType": "APCleaningBackend.Controllers.AuthController",
+    "Method": "ChangePassowrd",
+    "RelativePath": "api/Auth/change-password",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "APCleaningBackend.ViewModel.ResetPasswordModel",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.AuthController",
+    "Method": "DeleteProfile",
+    "RelativePath": "api/Auth/deleteProfile",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "APCleaningBackend.ViewModel.DeleteUserModel",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.AuthController",
     "Method": "ForgotPassword",
     "RelativePath": "api/Auth/forgot-password",
     "HttpMethod": "POST",
@@ -192,6 +224,22 @@
       {
         "Name": "model",
         "Type": "APCleaningBackend.ViewModel.ResetPasswordModel",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.AuthController",
+    "Method": "UpdateProfile",
+    "RelativePath": "api/Auth/updateUser",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "APCleaningBackend.ViewModel.UpdateUserModel",
         "IsRequired": true
       }
     ],
@@ -1079,5 +1127,57 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.UserDashboardController",
+    "Method": "GetBookingHistory",
+    "RelativePath": "api/UserDashboard/GetBookingHistory",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userID",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[APCleaningBackend.Model.Booking, APCleaningBackend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.UserDashboardController",
+    "Method": "GetUpcomingBookings",
+    "RelativePath": "api/UserDashboard/GetUpcomingBookings",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userID",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[APCleaningBackend.Model.Booking, APCleaningBackend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   }
 ]

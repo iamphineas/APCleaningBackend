@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackendTest\\APCleaningBackendTest.csproj": {}
+    "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackendTest\\APCleaningBackendTest.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackendTest\\APCleaningBackendTest.csproj": {
+    "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackendTest\\APCleaningBackendTest.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackendTest\\APCleaningBackendTest.csproj",
+        "projectUniqueName": "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackendTest\\APCleaningBackendTest.csproj",
         "projectName": "APCleaningBackendTest",
-        "projectPath": "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackendTest\\APCleaningBackendTest.csproj",
-        "packagesPath": "C:\\Users\\Alwande Ngcobo\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackendTest\\obj\\",
+        "projectPath": "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackendTest\\APCleaningBackendTest.csproj",
+        "packagesPath": "C:\\Users\\troyk\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackendTest\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Alwande Ngcobo\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\troyk\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -26,15 +22,14 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackend\\APCleaningBackend.csproj": {
-                "projectPath": "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackend\\APCleaningBackend.csproj"
+              "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackend\\APCleaningBackend.csproj": {
+                "projectPath": "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackend\\APCleaningBackend.csproj"
               }
             }
           }
@@ -47,9 +42,8 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "all"
-        },
-        "SdkAnalysisLevel": "9.0.100"
+          "auditMode": "direct"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -96,25 +90,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackend\\APCleaningBackend.csproj": {
+    "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackend\\APCleaningBackend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackend\\APCleaningBackend.csproj",
+        "projectUniqueName": "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackend\\APCleaningBackend.csproj",
         "projectName": "APCleaningBackend",
-        "projectPath": "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackend\\APCleaningBackend.csproj",
-        "packagesPath": "C:\\Users\\Alwande Ngcobo\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Alwande Ngcobo\\Downloads\\APCleaningBackend-booking (2)\\APCleaningBackend-booking\\APCleaningBackend-booking\\APCleaningBackend\\obj\\",
+        "projectPath": "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackend\\APCleaningBackend.csproj",
+        "packagesPath": "C:\\Users\\troyk\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\troyk\\OneDrive\\Desktop\\Dev Files\\Side Projects\\APCleaningBackend\\APCleaningBackend\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Alwande Ngcobo\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\troyk\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -122,7 +112,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -139,9 +128,8 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "all"
-        },
-        "SdkAnalysisLevel": "9.0.100"
+          "auditMode": "direct"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -209,7 +197,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

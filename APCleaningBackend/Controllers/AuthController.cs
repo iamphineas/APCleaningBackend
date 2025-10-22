@@ -57,6 +57,45 @@ namespace APCleaningBackend.Controllers
             return Ok(new { message = "User registered successfully" });
         }
 
+        [HttpPost("updateUser")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserModel model)
+        {
+            var existingUser = await _userManager.FindByIdAsync(model.UserId);
+            if (existingUser == null) throw new Exception("User not found");
+
+            existingUser.UserName = model.FullName;
+            existingUser.Email = model.Email;
+            existingUser.FullName = model.FullName;
+            existingUser.PhoneNumber = model.PhoneNumber;
+
+            var result = await _userManager.UpdateAsync(existingUser);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description);
+                return BadRequest(new { errors });
+            }
+
+
+            return Ok(new { message = "User updated successfully" });
+        }
+
+        [HttpPost("deleteProfile")]
+        public async Task<IActionResult> DeleteProfile([FromBody] DeleteUserModel model)
+        {
+            var existingUser = await _userManager.FindByIdAsync(model.UserId);
+            if (existingUser == null) throw new Exception("User not found");
+
+            var result = await _userManager.DeleteAsync(existingUser);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description);
+                return BadRequest(new { errors });
+            }
+
+            return Ok(new { message = "User updated successfully" });
+        }
+
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
@@ -134,17 +173,39 @@ namespace APCleaningBackend.Controllers
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
-                return BadRequest(new { message = "Invalid reset request." });
+          
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                    return BadRequest(new { message = "Invalid reset request." });
 
-            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
-            if (!result.Succeeded)
-            {
-                var errors = result.Errors.Select(e => e.Description);
-                return BadRequest(new { errors });
-            }
+                var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
 
+                if (!result.Succeeded)
+                {
+                    var errors = result.Errors.Select(e => e.Description);
+                    return BadRequest(new { errors });
+                }
+     
+            return Ok(new { message = "Password reset successful." });
+        }
+
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassowrd([FromBody] ResetPasswordModel model)
+        {          
+           
+                ApplicationUser user = await _userManager.FindByIdAsync(model.UserId);
+                if (user == null)
+                    return BadRequest(new { message = "Invalid reset request." });
+
+                var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
+                if (!result.Succeeded)
+                {
+                    var errors = result.Errors.Select(e => e.Description);
+                    return BadRequest(new { errors });
+                }
+            
             return Ok(new { message = "Password reset successful." });
         }
     }
