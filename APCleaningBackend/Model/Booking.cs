@@ -63,14 +63,15 @@ namespace APCleaningBackend.Model
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
         [Required]
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
         [Required]
-        public string ZipCode { get; set; }
-        public string City { get; set; }
+        public string? ZipCode { get; set; }
+        public string? City { get; set; }
         public string Province { get; set; } = "Durban";
-        public string FullName { get; set; }
-        public string Email { get; set; }
+        public string? FullName { get; set; }
+        public string? Email { get; set; }
+        public string? SpecialInstructions { get; set; }
 
     }
 }

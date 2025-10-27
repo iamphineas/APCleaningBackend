@@ -12,6 +12,7 @@ namespace APCleaningBackend.Model
 
         public int ServiceTypeID { get; set; }  // E.g., "Deep Clean", "Carpet Cleaning"
         public string AvailabilityStatus { get; set; } = "Available";  // E.g., "Available", "Unavailable"
+        public string CleanerImageUrl { get; set; }
 
         // Cleaner-specific bookings
         public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();

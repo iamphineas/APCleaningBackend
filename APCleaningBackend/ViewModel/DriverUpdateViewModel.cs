@@ -1,6 +1,6 @@
 ﻿namespace APCleaningBackend.ViewModel
 {
-    public class DriverUpdateModel
+    public class DriverUpdateViewModel
     {
         public string FullName { get; set; }
         public string Email { get; set; }
@@ -8,7 +8,6 @@
         public string LicenseNumber { get; set; }
         public string VehicleType { get; set; }
         public string AvailabilityStatus { get; set; }
-        public IFormFile? DriverImage { get; set; }
-
+        public string DriverImageUrl { get; set; }
     }
 }

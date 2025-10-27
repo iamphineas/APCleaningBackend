@@ -9,6 +9,7 @@ using APCleaningBackend.Areas.Identity.Data;
 using APCleaningBackend.Model;
 using Microsoft.AspNetCore.Identity;
 using APCleaningBackend.ViewModel;
+using APCleaningBackend.Services;
 
 namespace APCleaningBackend.Controllers
 {
@@ -18,11 +19,15 @@ namespace APCleaningBackend.Controllers
     {
         private readonly APCleaningBackendContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IBlobUploader _blobUploader;
+        private readonly string _driverContainer;
 
-        public DriverDetailsController(APCleaningBackendContext context, UserManager<ApplicationUser> userManager)
+        public DriverDetailsController(APCleaningBackendContext context, UserManager<ApplicationUser> userManager, IConfiguration config, IBlobUploader blobUploader)
         {
             _context = context;
             _userManager = userManager;
+            _blobUploader = blobUploader;
+            _driverContainer = config["Azure:DriverContainer"];
         }
 
         // GET: DriverDetails
@@ -40,7 +45,8 @@ namespace APCleaningBackend.Controllers
                                      PhoneNumber = user.PhoneNumber,
                                      LicenseNumber = dd.LicenseNumber,
                                      VehicleType = dd.VehicleType,
-                                     AvailabilityStatus = dd.AvailabilityStatus
+                                     AvailabilityStatus = dd.AvailabilityStatus,
+                                     DriverImageUrl = dd.DriverImageUrl,
                                  }).ToListAsync();
 
             return Ok(drivers);
@@ -54,14 +60,15 @@ namespace APCleaningBackend.Controllers
                                 join user in _context.Users
                                 on dd.UserId equals user.Id
                                 where dd.DriverDetailsID == id
-                                select new DriverUpdateModel
+                                select new DriverUpdateViewModel
                                 {
                                     FullName = user.FullName,
                                     Email = user.Email,
                                     PhoneNumber = user.PhoneNumber,
                                     LicenseNumber = dd.LicenseNumber,
                                     VehicleType = dd.VehicleType,
-                                    AvailabilityStatus = dd.AvailabilityStatus
+                                    AvailabilityStatus = dd.AvailabilityStatus,
+                                    DriverImageUrl = dd.DriverImageUrl
                                 }).FirstOrDefaultAsync();
 
             if (driver == null)
@@ -72,8 +79,20 @@ namespace APCleaningBackend.Controllers
 
         // POST: api/DriverDetails
         [HttpPost]
-        public async Task<ActionResult<DriverDetails>> PostDriver([FromBody] DriverViewModel model)
+        public async Task<ActionResult<DriverDetails>> PostDriver([FromForm] DriverRegisterModel model)
         {
+            string uploadedFileName = null;
+
+            try
+            {
+                uploadedFileName = await _blobUploader.UploadAsync(model.DriverImage, _driverContainer);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Blob upload failed: {ex.Message}");
+                return StatusCode(500, "File upload failed.");
+            }
+
             var user = new ApplicationUser
             {
                 UserName = model.Email,
@@ -98,7 +117,8 @@ namespace APCleaningBackend.Controllers
                     UserId = user.Id,
                     LicenseNumber = model.LicenseNumber,
                     AvailabilityStatus = "Available",
-                    VehicleType = model.VehicleType
+                    VehicleType = model.VehicleType,
+                    DriverImageUrl = uploadedFileName
                 };
 
                 _context.DriverDetails.Add(driver);
@@ -131,7 +151,7 @@ namespace APCleaningBackend.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateDriver(int id, [FromBody] DriverUpdateModel model)
+        public async Task<IActionResult> UpdateDriver(int id, [FromForm] DriverUpdateModel model)
         {
             var driver = await _context.DriverDetails.FindAsync(id);
             if (driver == null)
@@ -140,6 +160,21 @@ namespace APCleaningBackend.Controllers
             var user = await _context.Users.FindAsync(driver.UserId);
             if (user == null)
                 return NotFound("User profile not found.");
+
+            string uploadedFileName = driver.DriverImageUrl;
+
+            if (model.DriverImage != null && model.DriverImage.Length > 0)
+            {
+                try
+                {
+                    uploadedFileName = await _blobUploader.UploadAsync(model.DriverImage, _driverContainer);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Blob upload failed: {ex.Message}");
+                    return StatusCode(500, "File upload failed.");
+                }
+            }
 
             // Update user profile
             user.FullName = model.FullName;
@@ -151,6 +186,7 @@ namespace APCleaningBackend.Controllers
             driver.LicenseNumber = model.LicenseNumber;
             driver.VehicleType = model.VehicleType;
             driver.AvailabilityStatus = model.AvailabilityStatus;
+            driver.DriverImageUrl = uploadedFileName;
 
             Console.WriteLine("Incoming payload:");
             Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(model));

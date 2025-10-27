@@ -10,6 +10,7 @@ using APCleaningBackend.Model;
 using Microsoft.AspNetCore.Identity;
 using Azure.Storage.Blobs;
 using APCleaningBackend.ViewModel;
+using APCleaningBackend.Services;
 
 namespace APCleaningBackend.Controllers
 {
@@ -19,11 +20,15 @@ namespace APCleaningBackend.Controllers
     {
         private readonly APCleaningBackendContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IBlobUploader _blobUploader;
+        private readonly string _cleanerContainer;
 
-        public CleanerDetailsController(APCleaningBackendContext context, UserManager<ApplicationUser> userManager)
+        public CleanerDetailsController(APCleaningBackendContext context, UserManager<ApplicationUser> userManager, IConfiguration config, IBlobUploader blobUploader)
         {
             _context = context;
             _userManager = userManager;
+            _blobUploader = blobUploader;
+            _cleanerContainer = config["Azure:CleanerContainer"];
         }
 
         // GET: CleanerDetails
@@ -43,7 +48,8 @@ namespace APCleaningBackend.Controllers
                                       PhoneNumber = user.PhoneNumber,
                                       ServiceTypeID = cd.ServiceTypeID,
                                       ServiceName = service.Name,
-                                      AvailabilityStatus = cd.AvailabilityStatus
+                                      AvailabilityStatus = cd.AvailabilityStatus,
+                                      CleanerImageUrl = cd.CleanerImageUrl,
                                   }).ToListAsync();
 
             return Ok(cleaners);
@@ -57,13 +63,14 @@ namespace APCleaningBackend.Controllers
                                 join user in _context.Users
                                 on cd.UserId equals user.Id
                                 where cd.CleanerDetailsID == id
-                                select new CleanerRegisterModel
+                                select new CleanerUpdateViewModel
                                 {
                                     FullName = user.FullName,
                                     Email = user.Email,
                                     PhoneNumber = user.PhoneNumber,
                                     ServiceTypeID= cd.ServiceTypeID,
-                                    AvailabilityStatus = cd.AvailabilityStatus
+                                    AvailabilityStatus = cd.AvailabilityStatus,
+                                    CleanerImageUrl = cd.CleanerImageUrl,
                                 }).FirstOrDefaultAsync();
 
             if (driver == null)
@@ -74,8 +81,20 @@ namespace APCleaningBackend.Controllers
 
         // POST: api/CleanerDetails
         [HttpPost]
-        public async Task<ActionResult<CleanerDetails>> PostCleaner([FromBody] CleanerRegisterModel model)
+        public async Task<ActionResult<CleanerDetails>> PostCleaner([FromForm] CleanerRegisterModel model)
         {
+            string uploadedFileName = null;
+
+            try
+            {
+                uploadedFileName = await _blobUploader.UploadAsync(model.CleanerImage, _cleanerContainer);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Blob upload failed: {ex.Message}");
+                return StatusCode(500, "File upload failed.");
+            }
+
             var user = new ApplicationUser
             {
                 UserName = model.Email,
@@ -101,7 +120,8 @@ namespace APCleaningBackend.Controllers
                 {
                     UserId = user.Id,
                     ServiceTypeID = model.ServiceTypeID,
-                    AvailabilityStatus = "Available"
+                    AvailabilityStatus = "Available",
+                    CleanerImageUrl = uploadedFileName
                 };
 
                 _context.CleanerDetails.Add(cleaner);
@@ -134,8 +154,20 @@ namespace APCleaningBackend.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCleaner(int id, [FromBody] CleanerUpdateModel model)
+        public async Task<IActionResult> UpdateCleaner(int id, [FromForm] CleanerUpdateModel model)
         {
+            string uploadedFileName = null;
+
+            try
+            {
+                uploadedFileName = await _blobUploader.UploadAsync(model.CleanerImage, _cleanerContainer);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Blob upload failed: {ex.Message}");
+                return StatusCode(500, "File upload failed.");
+            }
+
             var cleaner = await _context.CleanerDetails.FindAsync(id);
             if (cleaner == null)
                 return NotFound("Driver record not found.");
@@ -153,6 +185,7 @@ namespace APCleaningBackend.Controllers
             // Update cleaner details
             cleaner.ServiceTypeID = model.ServiceTypeID;
             cleaner.AvailabilityStatus = model.AvailabilityStatus;
+            cleaner.CleanerImageUrl = uploadedFileName;
 
             Console.WriteLine("Incoming payload:");
             Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(model));

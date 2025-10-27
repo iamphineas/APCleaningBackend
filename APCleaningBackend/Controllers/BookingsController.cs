@@ -140,7 +140,8 @@ namespace APCleaningBackend.Controllers
                 Email = email,
                 Address = model.Address,
                 City = model.City,
-                ZipCode = model.ZipCode
+                ZipCode = model.ZipCode,
+                SpecialInstructions = model.SpecialInstructions,
             };
 
 

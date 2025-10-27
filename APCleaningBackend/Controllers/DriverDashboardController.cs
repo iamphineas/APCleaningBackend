@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using APCleaningBackend.Model;
 using APCleaningBackend.Areas.Identity.Data;
+using APCleaningBackend.Services;
 
 namespace APCleaningBackend.Controllers
 {
@@ -13,10 +14,12 @@ namespace APCleaningBackend.Controllers
     public class DriverDashboardController : ControllerBase
     {
         private readonly APCleaningBackendContext _context;
+        private readonly IEmailService _emailService;
 
-        public DriverDashboardController(APCleaningBackendContext context)
+        public DriverDashboardController(APCleaningBackendContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         private string GetUserId()
@@ -59,7 +62,7 @@ namespace APCleaningBackend.Controllers
                                       b.Province,
                                       ServiceName = st.Name,
                                       CleanerName = cu.FullName,
-                                      AssignedDriverID = b.AssignedDriverID // ✅ Added for frontend dispatch note
+                                      AssignedDriverID = b.AssignedDriverID // Added for frontend dispatch note
                                   }).ToListAsync();
 
             return Ok(bookings);
@@ -147,6 +150,28 @@ namespace APCleaningBackend.Controllers
                 Console.WriteLine("Error logging dispatch note: " + ex.Message);
                 return StatusCode(500, "Internal server error");
             }
+        }
+
+        [HttpPut("bookings/{id}/driver-status")]
+        public async Task<IActionResult> UpdateDriverBookingStatus(int id, [FromBody] string newStatus)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var driver = await _context.DriverDetails.FirstOrDefaultAsync(d => d.UserId == userId);
+            if (driver == null) return NotFound();
+
+            var booking = await _context.Booking.Include(b => b.ServiceType).FirstOrDefaultAsync(b => b.BookingID == id);
+            if (booking == null || booking.AssignedDriverID != driver.DriverDetailsID)
+                return Unauthorized();
+
+            if (newStatus != "EnRoute" && newStatus != "Arrived")
+                return BadRequest("Invalid status. Drivers can only mark EnRoute or Arrived.");
+
+            booking.BookingStatus = newStatus;
+            await _context.SaveChangesAsync();
+
+            await _emailService.SendDriverStatusToCustomerAsync(booking);
+
+            return Ok(new { message = $"Booking marked as {newStatus}." });
         }
     }
 }

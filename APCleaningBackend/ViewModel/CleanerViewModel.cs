@@ -10,5 +10,6 @@
         public int ServiceTypeID { get; set; }
         public string ServiceName { get; set; }
         public string AvailabilityStatus { get; set; } = "Available";
+        public string CleanerImageUrl { get; set; }
     }
 }

@@ -91,5 +91,38 @@
 
             });
         }
+
+        public async Task SendDriverStatusToCustomerAsync(Booking booking)
+        {
+            var resend = ResendClient.Create(_config["Resend:ApiKey"]);
+
+            if (booking.BookingStatus.Equals("EnRoute")) 
+            {
+                await resend.EmailSendAsync(new EmailMessage
+                {
+                    From = "onboarding@resend.dev",
+                    To = "alwandengcobo3@gmail.com",
+                    Subject = "Status Update!",
+                    HtmlBody = $@"
+        <p>Hi there {booking.FullName},</p>
+        <p>The driver and cleaner are {booking.BookingStatus} to your location now</p>"
+
+                });
+            }
+            else
+            {
+                await resend.EmailSendAsync(new EmailMessage
+                {
+                    From = "onboarding@resend.dev",
+                    To = "alwandengcobo3@gmail.com",
+                    Subject = "Status Update!",
+                    HtmlBody = $@"
+        <p>Hi there {booking.FullName},</p>
+        <p>The driver and cleaner have arrived to your location</p>"
+
+                });
+            }
+
+        }
     }
 }

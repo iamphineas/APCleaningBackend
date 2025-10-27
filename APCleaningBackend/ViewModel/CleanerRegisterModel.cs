@@ -9,5 +9,6 @@
         public string Password { get; set; }
         public int ServiceTypeID { get; set; }
         public string AvailabilityStatus { get; set; } = "Available";
+        public IFormFile? CleanerImage { get; set; }
     }
 }

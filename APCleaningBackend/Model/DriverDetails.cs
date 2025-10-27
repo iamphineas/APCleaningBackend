@@ -13,6 +13,7 @@ namespace APCleaningBackend.Model
         public string LicenseNumber { get; set; }  // License number
         public string VehicleType { get; set; }    // E.g., "Van", "SUV"
         public string AvailabilityStatus { get; set; } = "Available";  // E.g., "Available", "Unavailable"
+        public string DriverImageUrl { get; set; }
     }
 
 

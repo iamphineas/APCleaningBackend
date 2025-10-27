@@ -70,5 +70,37 @@ namespace APCleaningBackend.Controllers
             return Ok(feedback);
         }
 
+        [HttpGet("completed-cleaners")]
+        public async Task<IActionResult> GetCleanersWithCompletedBookings()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var cleaners = await (
+                from b in _context.Booking
+                where b.CustomerID == userId &&
+                      b.BookingStatus == "Completed" &&
+                      b.AssignedCleanerID != null
+
+                join cd in _context.CleanerDetails
+                on b.AssignedCleanerID equals cd.CleanerDetailsID
+
+                join cu in _context.Users
+                on cd.UserId equals cu.Id
+
+                group new { cd, cu } by cd.CleanerDetailsID into g
+                select new
+                {
+                    CleanerDetailsID = g.Key,
+                    FullName = g.Select(x => x.cu.FullName).FirstOrDefault(),
+                    CleanerImageUrl = g.Select(x => x.cd.CleanerImageUrl).FirstOrDefault()
+                }
+
+            ).ToListAsync();
+
+            return Ok(cleaners);
+        }
+
     }
 }

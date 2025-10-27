@@ -444,9 +444,44 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "model",
-        "Type": "APCleaningBackend.ViewModel.CleanerRegisterModel",
-        "IsRequired": true
+        "Name": "CleanerDetailsID",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "FullName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Email",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PhoneNumber",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Password",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "ServiceTypeID",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "AvailabilityStatus",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "CleanerImage",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": [
@@ -517,9 +552,39 @@
         "IsRequired": true
       },
       {
-        "Name": "model",
-        "Type": "APCleaningBackend.ViewModel.CleanerUpdateModel",
-        "IsRequired": true
+        "Name": "CleanerDetailsID",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "FullName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Email",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PhoneNumber",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "ServiceTypeID",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "AvailabilityStatus",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "CleanerImage",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -670,6 +735,27 @@
   },
   {
     "ContainingType": "APCleaningBackend.Controllers.DriverDashboardController",
+    "Method": "UpdateDriverBookingStatus",
+    "RelativePath": "api/DriverDashboard/bookings/{id}/driver-status",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "newStatus",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.DriverDashboardController",
     "Method": "LogDispatchNote",
     "RelativePath": "api/DriverDashboard/DispatchNote",
     "HttpMethod": "POST",
@@ -729,9 +815,39 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "model",
-        "Type": "APCleaningBackend.ViewModel.DriverViewModel",
-        "IsRequired": true
+        "Name": "FullName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Email",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PhoneNumber",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Password",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "LicenseNumber",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "VehicleType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "DriverImage",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": [
@@ -792,9 +908,39 @@
         "IsRequired": true
       },
       {
-        "Name": "model",
-        "Type": "APCleaningBackend.ViewModel.DriverUpdateModel",
-        "IsRequired": true
+        "Name": "FullName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Email",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PhoneNumber",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "LicenseNumber",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "VehicleType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "AvailabilityStatus",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "DriverImage",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -824,6 +970,16 @@
     "ContainingType": "APCleaningBackend.Controllers.FeedbacksController",
     "Method": "GetFeedbackForCleaner",
     "RelativePath": "api/Feedbacks/cleaner",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "APCleaningBackend.Controllers.FeedbacksController",
+    "Method": "GetCleanersWithCompletedBookings",
+    "RelativePath": "api/Feedbacks/completed-cleaners",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
