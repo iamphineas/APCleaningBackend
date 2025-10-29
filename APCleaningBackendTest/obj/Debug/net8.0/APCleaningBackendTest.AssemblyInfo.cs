@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("APCleaningBackendTest")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1bfeceefba10d9fe5599ef0f2692c7d980316a31")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+299b1fda38f00d398c4f47f10f01f2607a0207b6")]
 [assembly: System.Reflection.AssemblyProductAttribute("APCleaningBackendTest")]
 [assembly: System.Reflection.AssemblyTitleAttribute("APCleaningBackendTest")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
