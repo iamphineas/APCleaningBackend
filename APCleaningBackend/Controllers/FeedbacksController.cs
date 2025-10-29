@@ -102,5 +102,33 @@ namespace APCleaningBackend.Controllers
             return Ok(cleaners);
         }
 
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllFeedback()
+        {
+            var feedback = await (
+                from f in _context.Feedback
+
+                join cd in _context.CleanerDetails
+                on f.CleanerID equals cd.CleanerDetailsID
+
+                join cu in _context.Users
+                on cd.UserId equals cu.Id
+
+                orderby f.CreatedDate descending
+
+                select new
+                {
+                    f.FeedbackID,
+                    f.Rating,
+                    f.Comments,
+                    f.CreatedDate,
+                    CleanerName = cu.FullName,
+                    CleanerImageUrl = cd.CleanerImageUrl
+                }
+            ).ToListAsync();
+
+            return Ok(feedback);
+        }
+
     }
 }

@@ -70,7 +70,8 @@ public class AdminControllerTests
         {
             CleanerDetailsID = 1,
             UserId = "c1",
-            AvailabilityStatus = "Available"
+            AvailabilityStatus = "Available",
+            CleanerImageUrl = "test-cleaner.jpg"
         });
 
         context.DriverDetails.Add(new DriverDetails
@@ -79,7 +80,8 @@ public class AdminControllerTests
             UserId = "d1",
             AvailabilityStatus = "Available",
             LicenseNumber = "ABC123",
-            VehicleType = "Van"
+            VehicleType = "Van",
+            DriverImageUrl = "test-driver.jpg"
         });
 
         context.Booking.Add(new Booking
@@ -144,14 +146,15 @@ public class AdminControllerTests
             CustomerID = "cust456",
             ServiceTypeID = 1,
             ServiceDate = DateTime.Today,
-            BookingAmount = 200
+            BookingAmount = 200,
         });
 
         context.CleanerDetails.Add(new CleanerDetails
         {
             CleanerDetailsID = 1,
             UserId = "c1",
-            AvailabilityStatus = "Unavailable"
+            AvailabilityStatus = "Unavailable",
+            CleanerImageUrl = "test-cleaner.jpg"
         });
 
         context.DriverDetails.Add(new DriverDetails
@@ -160,7 +163,8 @@ public class AdminControllerTests
             UserId = "d1",
             AvailabilityStatus = "Unavailable",
             LicenseNumber = "XYZ789",
-            VehicleType = "Truck"
+            VehicleType = "Truck",
+            DriverImageUrl = "test-driver.jpg"
         });
 
         await context.SaveChangesAsync();
@@ -277,7 +281,8 @@ public class AdminControllerTests
         {
             UserId = "u1",
             ServiceTypeID = serviceType.ServiceTypeID,
-            AvailabilityStatus = "Available"
+            AvailabilityStatus = "Available",
+            CleanerImageUrl = "test-cleaner.jpg"
         });
 
         await context.SaveChangesAsync();
@@ -305,7 +310,8 @@ public class AdminControllerTests
             UserId = "u1",
             LicenseNumber = "XYZ",
             VehicleType = "Van",
-            AvailabilityStatus = "Available"
+            AvailabilityStatus = "Available",
+            DriverImageUrl = "test-driver.jpg"
         });
 
         await context.SaveChangesAsync();
@@ -333,8 +339,8 @@ public class AdminControllerTests
         );
 
         // Seed cleaner/driver details
-        context.CleanerDetails.Add(new CleanerDetails { CleanerDetailsID = 1, UserId = "c1", AvailabilityStatus = "Available", ServiceTypeID = 1 });
-        context.DriverDetails.Add(new DriverDetails { DriverDetailsID = 1, UserId = "d1", AvailabilityStatus = "Available", LicenseNumber = "XYZ", VehicleType = "Van" });
+        context.CleanerDetails.Add(new CleanerDetails { CleanerDetailsID = 1, UserId = "c1", AvailabilityStatus = "Available", ServiceTypeID = 1, CleanerImageUrl = "test-cleaner.jpg" });
+        context.DriverDetails.Add(new DriverDetails { DriverDetailsID = 1, UserId = "d1", AvailabilityStatus = "Available", LicenseNumber = "XYZ", VehicleType = "Van", DriverImageUrl = "test-driver.jpg" });
 
         // Seed bookings
         context.Booking.AddRange(

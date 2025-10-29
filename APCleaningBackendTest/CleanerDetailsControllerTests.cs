@@ -1,12 +1,16 @@
 ﻿using APCleaningBackend.Areas.Identity.Data;
 using APCleaningBackend.Controllers;
 using APCleaningBackend.Model;
+using APCleaningBackend.Services;
 using APCleaningBackend.ViewModel;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -15,12 +19,19 @@ namespace APCleaningBackendTest
     public class CleanerDetailsControllerTests
     {
         private readonly Mock<UserManager<ApplicationUser>> _mockUserManager;
+        private readonly Mock<IConfiguration> _mockConfig;
+        private readonly Mock<IBlobUploader> _mockBlobUploader;
 
         public CleanerDetailsControllerTests()
         {
             var store = new Mock<IUserStore<ApplicationUser>>();
             _mockUserManager = new Mock<UserManager<ApplicationUser>>(
                 store.Object, null, null, null, null, null, null, null, null);
+
+            _mockConfig = new Mock<IConfiguration>();
+            _mockBlobUploader = new Mock<IBlobUploader>();
+
+            _mockConfig.Setup(c => c["Azure:CleanerContainer"]).Returns("cleaner-container");
         }
 
         private (CleanerDetailsController controller, APCleaningBackendContext context) CreateControllerWithContext(string dbName)
@@ -31,7 +42,14 @@ namespace APCleaningBackendTest
                 .Options;
 
             var context = new APCleaningBackendContext(options);
-            var controller = new CleanerDetailsController(context, _mockUserManager.Object);
+
+            var controller = new CleanerDetailsController(
+                context,
+                _mockUserManager.Object,
+                _mockConfig.Object,
+                _mockBlobUploader.Object
+            );
+
             return (controller, context);
         }
 
@@ -62,7 +80,8 @@ namespace APCleaningBackendTest
                 CleanerDetailsID = 101,
                 UserId = user.Id,
                 ServiceTypeID = 1,
-                AvailabilityStatus = "Available"
+                AvailabilityStatus = "Available",
+                CleanerImageUrl = "img.jpg"
             });
 
             await context.SaveChangesAsync();
@@ -92,14 +111,15 @@ namespace APCleaningBackendTest
                 CleanerDetailsID = 1,
                 UserId = user.Id,
                 ServiceTypeID = 1,
-                AvailabilityStatus = "Available"
+                AvailabilityStatus = "Available",
+                CleanerImageUrl = "img2.jpg"
             });
 
             await context.SaveChangesAsync();
 
             var result = await controller.GetCleaner(1);
             var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var cleaner = Assert.IsType<CleanerRegisterModel>(ok.Value);
+            var cleaner = Assert.IsType<CleanerUpdateViewModel>(ok.Value);
             Assert.Equal("Alwande", cleaner.FullName);
         }
 
@@ -108,22 +128,39 @@ namespace APCleaningBackendTest
         {
             var (controller, context) = CreateControllerWithContext("PostCleanerDb");
 
+            var service = new ServiceType
+            {
+                ServiceTypeID = 1,
+                Name = "Deep Clean",
+                Description = "Thorough cleaning",
+                ImageURL = "https://example.com/image.jpg"
+            };
+
+            context.ServiceType.Add(service);
+            await context.SaveChangesAsync();
+
+            var mockFile = new Mock<IFormFile>();
+            var ms = new MemoryStream();
+            var writer = new StreamWriter(ms);
+            writer.Write("fake image content");
+            writer.Flush();
+            ms.Position = 0;
+            mockFile.Setup(f => f.OpenReadStream()).Returns(ms);
+            mockFile.Setup(f => f.FileName).Returns("cleaner.jpg");
+            mockFile.Setup(f => f.Length).Returns(ms.Length);
+
             var model = new CleanerRegisterModel
             {
                 FullName = "Alwande",
                 Email = "alwande@example.com",
                 PhoneNumber = "0123456789",
                 Password = "Secure123!",
-                ServiceTypeID = 1
+                ServiceTypeID = 1,
+                CleanerImage = mockFile.Object
             };
 
-            context.ServiceType.Add(new ServiceType
-            {
-                ServiceTypeID = 1,
-                Name = "Deep Clean",
-                Description = "Thorough cleaning",
-                ImageURL = "https://example.com/image.jpg"
-            });
+            _mockBlobUploader.Setup(b => b.UploadAsync(model.CleanerImage, "cleaner-container"))
+                .ReturnsAsync("uploaded-cleaner.jpg");
 
             _mockUserManager.Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), model.Password))
                 .ReturnsAsync(IdentityResult.Success);
@@ -134,6 +171,7 @@ namespace APCleaningBackendTest
             var created = Assert.IsType<CreatedAtActionResult>(result.Result);
             var cleaner = Assert.IsType<CleanerDetails>(created.Value);
             Assert.Equal("Available", cleaner.AvailabilityStatus);
+            Assert.Equal("uploaded-cleaner.jpg", cleaner.CleanerImageUrl);
         }
 
         [Fact]
@@ -154,7 +192,8 @@ namespace APCleaningBackendTest
                 CleanerDetailsID = 1,
                 UserId = user.Id,
                 ServiceTypeID = 1,
-                AvailabilityStatus = "Available"
+                AvailabilityStatus = "Available",
+                CleanerImageUrl = "test-cleaner.jpg"
             });
 
             await context.SaveChangesAsync();
@@ -190,10 +229,18 @@ namespace APCleaningBackendTest
                 CleanerDetailsID = 1,
                 UserId = user.Id,
                 ServiceTypeID = 1,
-                AvailabilityStatus = "Busy"
+                AvailabilityStatus = "Busy",
+                CleanerImageUrl = "old.jpg"
             });
 
             await context.SaveChangesAsync();
+
+            var mockFile = new Mock<IFormFile>();
+            mockFile.Setup(f => f.FileName).Returns("updated.jpg");
+            mockFile.Setup(f => f.Length).Returns(100);
+
+            _mockBlobUploader.Setup(b => b.UploadAsync(It.IsAny<IFormFile>(), "cleaner-container"))
+                .ReturnsAsync("new-uploaded.jpg");
 
             var model = new CleanerUpdateModel
             {
@@ -201,7 +248,8 @@ namespace APCleaningBackendTest
                 Email = "updated@example.com",
                 PhoneNumber = "9999999999",
                 ServiceTypeID = 1,
-                AvailabilityStatus = "Available"
+                AvailabilityStatus = "Available",
+                CleanerImage = mockFile.Object
             };
 
             var result = await controller.UpdateCleaner(1, model);
@@ -212,7 +260,7 @@ namespace APCleaningBackendTest
         [Fact]
         public async Task ResetCleanerPassword_ValidId_ResetsPassword()
         {
-            var (controller, context) = CreateControllerWithContext("ResetPasswordDb");
+            var (controller, context) = CreateControllerWithContext("ResetCleanerPasswordDb");
 
             var user = new ApplicationUser
             {
@@ -227,7 +275,8 @@ namespace APCleaningBackendTest
                 CleanerDetailsID = 1,
                 UserId = user.Id,
                 ServiceTypeID = 1,
-                AvailabilityStatus = "Available"
+                AvailabilityStatus = "Available",
+                CleanerImageUrl = "test-cleaner.jpg"
             });
 
             await context.SaveChangesAsync();
@@ -243,6 +292,7 @@ namespace APCleaningBackendTest
         }
     }
 }
+
 
 /* Code Attribution 
  * ------------------------------

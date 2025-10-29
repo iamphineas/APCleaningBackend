@@ -9,7 +9,6 @@ namespace APCleaningBackend.Controllers
     [ApiController]
     public class UserDashboardController : ControllerBase
     {
-
         private readonly APCleaningBackendContext _context;
 
         public UserDashboardController(APCleaningBackendContext context)
@@ -18,11 +17,18 @@ namespace APCleaningBackend.Controllers
         }
 
         [HttpGet("GetUpcomingBookings")]
-        public async Task<ActionResult<IEnumerable<Booking>>> GetUpcomingBookings(string userID)
+        public async Task<ActionResult<IEnumerable<object>>> GetUpcomingBookings(string userID)
         {
             var bookings = await _context.Booking
                 .Include(b => b.ServiceType)
-                .Select(b => new {
+                .Where(b =>
+                    b.CustomerID == userID &&
+                    b.ServiceDate > DateTime.Now &&
+                    b.BookingStatus != "Completed" &&
+                    b.BookingStatus != "Cancelled"
+                )
+                .Select(b => new
+                {
                     b.BookingID,
                     b.CustomerID,
                     b.FullName,
@@ -39,20 +45,23 @@ namespace APCleaningBackend.Controllers
                     b.AssignedCleanerID,
                     b.AssignedDriverID,
                     ServiceTypeName = b.ServiceType.Name
-                }).Where(b => b.ServiceDate > DateTime.Now && b.CustomerID == userID)
-        .ToListAsync();
+                })
+                .ToListAsync();
 
             return Ok(bookings);
-
         }
-
 
         [HttpGet("GetBookingHistory")]
-        public async Task<ActionResult<IEnumerable<Booking>>> GetBookingHistory(string userID)
+        public async Task<ActionResult<IEnumerable<object>>> GetBookingHistory(string userID)
         {
             var bookings = await _context.Booking
                 .Include(b => b.ServiceType)
-                .Select(b => new {
+                .Where(b =>
+                    b.CustomerID == userID &&
+                    (b.BookingStatus == "Completed" || b.BookingStatus == "Cancelled")
+                )
+                .Select(b => new
+                {
                     b.BookingID,
                     b.CustomerID,
                     b.FullName,
@@ -69,12 +78,10 @@ namespace APCleaningBackend.Controllers
                     b.AssignedCleanerID,
                     b.AssignedDriverID,
                     ServiceTypeName = b.ServiceType.Name
-                }).Where(b => b.ServiceDate < DateTime.Now && b.CustomerID == userID)
-        .ToListAsync();
+                })
+                .ToListAsync();
 
             return Ok(bookings);
-
         }
-
     }
 }

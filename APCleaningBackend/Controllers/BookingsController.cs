@@ -148,6 +148,19 @@ namespace APCleaningBackend.Controllers
 
             try
             {
+                bool isConflict = await _context.Booking.AnyAsync(b =>
+    b.ServiceDate == model.ServiceDate &&
+    b.ServiceStartTime == model.ServiceStartTime &&
+    b.ServiceEndTime == model.ServiceEndTime &&
+    b.BookingStatus != "Cancelled"
+);
+
+                if (isConflict)
+                {
+                    return Conflict("Sorry, this time slot is already booked. Please select another time.");
+                }
+
+
 
                 _context.Booking.Add(booking);
                 await _context.SaveChangesAsync();

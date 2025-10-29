@@ -1,6 +1,7 @@
 ﻿using APCleaningBackend.Areas.Identity.Data;
 using APCleaningBackend.Controllers;
 using APCleaningBackend.Model;
+using APCleaningBackend.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ namespace APCleaningBackendTest
     {
         private const string TestUserId = "cleaner-123";
 
-        private CleanerDashboardController CreateControllerWithContext(string dbName, out APCleaningBackendContext context)
+        private CleanerDashboardController CreateControllerWithContext(string dbName, out APCleaningBackendContext context, out Mock<IEmailService> mockEmailService)
         {
             var options = new DbContextOptionsBuilder<APCleaningBackendContext>()
                 .UseInMemoryDatabase(databaseName: dbName)
@@ -26,7 +27,14 @@ namespace APCleaningBackendTest
 
             context = new APCleaningBackendContext(options);
 
-            var controller = new CleanerDashboardController(context);
+            // Mock the email service
+            mockEmailService = new Mock<IEmailService>();
+            mockEmailService
+                .Setup(service => service.SendServiceCompleteToCustomerAsync(It.IsAny<Booking>()))
+                .Returns(Task.CompletedTask);
+
+            var controller = new CleanerDashboardController(context, mockEmailService.Object);
+
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, TestUserId),
@@ -45,7 +53,8 @@ namespace APCleaningBackendTest
         {
             UserId = TestUserId,
             AvailabilityStatus = "Unavailable",
-            ServiceTypeID = 1
+            ServiceTypeID = 1,
+            CleanerImageUrl = "test-cleaner.jpg"
         };
 
         private static Booking CreateBooking(int cleanerId, int serviceTypeId, int driverId = 0) => new Booking
@@ -70,7 +79,7 @@ namespace APCleaningBackendTest
         [Fact]
         public async Task GetAvailability_ReturnsStatus()
         {
-            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context);
+            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context, out _);
             context.CleanerDetails.Add(CreateCleaner());
             await context.SaveChangesAsync();
 
@@ -84,7 +93,7 @@ namespace APCleaningBackendTest
         [Fact]
         public async Task SetAvailability_UpdatesStatus()
         {
-            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context);
+            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context, out _);
             context.CleanerDetails.Add(CreateCleaner());
             await context.SaveChangesAsync();
 
@@ -98,7 +107,7 @@ namespace APCleaningBackendTest
         [Fact]
         public async Task GetAssignedBookings_ReturnsBookings()
         {
-            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context);
+            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context, out _);
 
             var cleaner = CreateCleaner();
             var service = new ServiceType
@@ -124,9 +133,9 @@ namespace APCleaningBackendTest
         }
 
         [Fact]
-        public async Task UpdateBookingStatus_Valid_UpdatesStatusAndAvailability()
+        public async Task UpdateBookingStatus_Valid_UpdatesStatusAndAvailability_AndSendsEmail()
         {
-            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context);
+            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context, out var mockEmailService);
 
             var cleaner = CreateCleaner();
             var driver = new DriverDetails
@@ -134,7 +143,8 @@ namespace APCleaningBackendTest
                 AvailabilityStatus = "Unavailable",
                 LicenseNumber = "DR123456",
                 UserId = "driver-456",
-                VehicleType = "Van"
+                VehicleType = "Van",
+                DriverImageUrl = "test-driver.jpg"
             };
 
             var service = new ServiceType
@@ -161,12 +171,15 @@ namespace APCleaningBackendTest
             Assert.Equal("Completed", updated.BookingStatus);
             Assert.Equal("Available", cleaner.AvailabilityStatus);
             Assert.Equal("Available", driver.AvailabilityStatus);
+
+            // Verify that the email service was triggered
+            mockEmailService.Verify(s => s.SendServiceCompleteToCustomerAsync(It.IsAny<Booking>()), Times.Once);
         }
 
         [Fact]
         public async Task GetNotifications_ReturnsList()
         {
-            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context);
+            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context, out _);
 
             context.Notification.Add(new Notification
             {
@@ -187,7 +200,7 @@ namespace APCleaningBackendTest
         [Fact]
         public async Task MarkNotificationRead_ValidId_SetsIsReadTrue()
         {
-            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context);
+            var controller = CreateControllerWithContext(Guid.NewGuid().ToString(), out var context, out _);
 
             context.Notification.Add(new Notification
             {

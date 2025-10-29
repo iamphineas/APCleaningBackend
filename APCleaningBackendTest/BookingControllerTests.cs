@@ -228,7 +228,8 @@ namespace APCleaningBackendTest
             var cleaner = new CleanerDetails
             {
                 UserId = "cleaner-user-id",
-                AvailabilityStatus = "Busy"
+                AvailabilityStatus = "Busy",
+                CleanerImageUrl = "test-cleaner.jpg"
             };
 
             var driver = new DriverDetails
@@ -236,7 +237,8 @@ namespace APCleaningBackendTest
                 UserId = "cleaner-user-id",
                 AvailabilityStatus = "Busy",
                 LicenseNumber = "DR123456",
-                VehicleType = "Van"
+                VehicleType = "Van",
+                DriverImageUrl = "test-driver.jpg"
             };
 
             context.CleanerDetails.Add(cleaner);

@@ -10,7 +10,6 @@ using APCleaningBackend.Services;
 using Resend;
 using Microsoft.Extensions.Options;
 
-
 namespace APCleaningBackend
 {
     public class Program
@@ -19,16 +18,19 @@ namespace APCleaningBackend
         {
             var builder = WebApplication.CreateBuilder(args);
             var configuration = builder.Configuration;
-            var connectionString = builder.Configuration.GetConnectionString("APCleaningBackendContextConnection") ?? throw new InvalidOperationException("Connection string 'APCleaningBackendContextConnection' not found.");
+            var connectionString = configuration.GetConnectionString("APCleaningBackendContextConnection")
+                ?? throw new InvalidOperationException("Connection string 'APCleaningBackendContextConnection' not found.");
 
-            builder.Services.AddDbContext<APCleaningBackendContext>(options => options.UseSqlServer(connectionString));
+            builder.Services.AddDbContext<APCleaningBackendContext>(options =>
+                options.UseSqlServer(connectionString));
 
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<APCleaningBackendContext>().AddDefaultTokenProviders(); ;
-
-
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+                options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<APCleaningBackendContext>()
+                .AddDefaultTokenProviders();
 
             // ---- JWT Authentication ----
-            var jwtKey = builder.Configuration["Jwt:Key"];
+            var jwtKey = configuration["Jwt:Key"];
             var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? "fallback-key"));
 
             builder.Services.AddAuthentication(options =>
@@ -40,7 +42,7 @@ namespace APCleaningBackend
             {
                 options.RequireHttpsMetadata = false; // set true in production
                 options.SaveToken = true;
-                options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = false,
                     ValidateAudience = false,
@@ -50,12 +52,11 @@ namespace APCleaningBackend
                 };
             });
 
-            // Add services to the container.
-
+            // Add services to the container
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAPCleaningFrontend",
@@ -64,6 +65,7 @@ namespace APCleaningBackend
                                     .AllowAnyMethod()
                                     .AllowCredentials());
             });
+
             builder.Services.AddScoped<IBlobUploader, AzureBlobUploader>();
             builder.Services.AddScoped<IEmailService, ResendEmailService>();
             builder.Services.AddHttpClient<ResendClient>();
@@ -74,8 +76,6 @@ namespace APCleaningBackend
                 return new ResendClient(options, httpClient);
             });
 
-
-
             var app = builder.Build();
             app.UseCors("AllowAPCleaningFrontend");
 
@@ -85,13 +85,13 @@ namespace APCleaningBackend
                 var services = scope.ServiceProvider;
                 var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                var config = services.GetRequiredService<IConfiguration>();
 
                 await SeedRolesAsync(roleManager);
-                await SeedAdminUserAsync(userManager);
+                await SeedAdminUserAsync(userManager, config);
             }
 
-
-            // Configure the HTTP request pipeline.
+            // Configure the HTTP request pipeline
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -99,15 +99,10 @@ namespace APCleaningBackend
             }
 
             app.UseHttpsRedirection();
-
             app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
-
-
             app.MapControllers();
-
             app.Run();
         }
 
@@ -125,11 +120,17 @@ namespace APCleaningBackend
             }
         }
 
-        //Admin User Seeder
-        static async Task SeedAdminUserAsync(UserManager<ApplicationUser> userManager)
+        static async Task SeedAdminUserAsync(UserManager<ApplicationUser> userManager, IConfiguration config)
         {
-            var adminEmail = "admin@yourapp.com";
-            var adminPassword = "Admin@123";
+            var adminEmail = config["AdminUser:Email"];
+            var adminPassword = config["AdminUser:Password"];
+            var fullName = config["AdminUser:FullName"] ?? "System Admin";
+
+            if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminPassword))
+            {
+                Console.WriteLine("Admin credentials missing from configuration.");
+                return;
+            }
 
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
             if (adminUser == null)
@@ -138,7 +139,7 @@ namespace APCleaningBackend
                 {
                     UserName = adminEmail,
                     Email = adminEmail,
-                    FullName = "System Admin",
+                    FullName = fullName,
                     IsActive = true,
                     CreatedDate = DateTime.UtcNow
                 };
@@ -151,7 +152,7 @@ namespace APCleaningBackend
                 }
                 else
                 {
-                    Console.WriteLine(" Failed to create admin user:");
+                    Console.WriteLine("Failed to create admin user:");
                     foreach (var error in result.Errors)
                     {
                         Console.WriteLine($"   - {error.Description}");
@@ -163,6 +164,5 @@ namespace APCleaningBackend
                 Console.WriteLine("Admin user already exists.");
             }
         }
-
     }
 }

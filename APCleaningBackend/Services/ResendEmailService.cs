@@ -18,8 +18,8 @@
 
             await resend.EmailSendAsync(new EmailMessage
             {
-                From = "onboarding@resend.dev",
-                To = "alwandengcobo3@gmail.com",
+                From = "AP Cleaning <noreply@apcleaning.co.za>",
+                To = $"{booking.Email}",
                 Subject = "Booking Confirmation & Invoice",
                 HtmlBody = $@"
 <!DOCTYPE html>
@@ -51,8 +51,6 @@
   </table>
   <table class='summary'>
     <tr><td><strong>Service Type</strong></td><td>{booking.ServiceType.Name}</td></tr>
-    <tr><td><strong>Start Time</strong></td><td>{booking.ServiceStartTime}</td></tr>
-    <tr><td><strong>End Time</strong></td><td>{booking.ServiceEndTime}</td></tr>
     <tr><td class='total'><strong>Total Amount</strong></td><td class='total'>R{booking.BookingAmount}</td></tr>
   </table>
   <p>Thank you for choosing AP Cleaning Services. We look forward to serving you!</p>
@@ -67,8 +65,8 @@
 
             await resend.EmailSendAsync(new EmailMessage
             {
-                From = "onboarding@resend.dev",
-                To = "alwandengcobo3@gmail.com",
+                From = "AP Cleaning <noreply@apcleaning.co.za>",
+                To = $"{email}",
                 Subject = "You're on the waitlist!",
                 HtmlBody = "<p>Thanks for signing up! We'll notify you when our shop launches.</p>"
             });
@@ -80,8 +78,8 @@
 
             await resend.EmailSendAsync(new EmailMessage
             {
-                From = "onboarding@resend.dev",
-                To = "alwandengcobo3@gmail.com",
+                From = "AP Cleaning <noreply@apcleaning.co.za>",
+                To = $"{booking.Email}",
                 Subject = "Your Cleaning Service is Complete!",
                 HtmlBody = $@"
         <p>Hi there {booking.FullName},</p>
@@ -100,12 +98,29 @@
             {
                 await resend.EmailSendAsync(new EmailMessage
                 {
-                    From = "onboarding@resend.dev",
-                    To = "alwandengcobo3@gmail.com",
+                    From = "AP Cleaning <noreply@apcleaning.co.za>",
+                    To = $"{booking.Email}",
                     Subject = "Status Update!",
                     HtmlBody = $@"
-        <p>Hi there {booking.FullName},</p>
-        <p>The driver and cleaner are {booking.BookingStatus} to your location now</p>"
+<p>Hi there {booking.FullName},</p>
+<p>Your cleaning team is on the way! Here's who to expect:</p>
+
+<table style='width:100%; margin-top:20px; font-family:Arial, sans-serif;'>
+  <tr>
+    <td style='text-align:center;'>
+      <img src='https://apcleaningstorage.blob.core.windows.net/driverimages/{booking.AssignedDriver.DriverImageUrl}' alt='Driver photo' style='width:100px; height:100px; border-radius:50%; object-fit:cover;' />
+      <p><strong>Driver:</strong> {booking.AssignedDriver.User.FullName}</p>
+    </td>
+    <td style='text-align:center;'>
+      <img src='https://apcleaningstorage.blob.core.windows.net/cleanerimages/{booking.AssignedCleaner.CleanerImageUrl}' alt='Cleaner photo' style='width:100px; height:100px; border-radius:50%; object-fit:cover;' />
+      <p><strong>Cleaner:</strong> {booking.AssignedCleaner.User.FullName}</p>
+    </td>
+  </tr>
+</table>
+
+<p>Status: <strong>{booking.BookingStatus}</strong></p>
+<p>We hope you're ready for a spotless experience!</p>
+"
 
                 });
             }
@@ -113,12 +128,28 @@
             {
                 await resend.EmailSendAsync(new EmailMessage
                 {
-                    From = "onboarding@resend.dev",
-                    To = "alwandengcobo3@gmail.com",
+                    From = "AP Cleaning <noreply@apcleaning.co.za>",
+                    To = $"{booking.Email}",
                     Subject = "Status Update!",
                     HtmlBody = $@"
         <p>Hi there {booking.FullName},</p>
-        <p>The driver and cleaner have arrived to your location</p>"
+        <p>The driver and cleaner have arrived to your location</p>
+<table style='width:100%; margin-top:20px; font-family:Arial, sans-serif;'>
+  <tr>
+    <td style='text-align:center;'>
+      <img src='https://apcleaningstorage.blob.core.windows.net/driverimages/{booking.AssignedDriver.DriverImageUrl}' alt='Driver photo' style='width:100px; height:100px; border-radius:50%; object-fit:cover;' />
+      <p><strong>Driver:</strong> {booking.AssignedDriver.User.FullName}</p>
+    </td>
+    <td style='text-align:center;'>
+      <img src='https://apcleaningstorage.blob.core.windows.net/cleanerimages/{booking.AssignedCleaner.CleanerImageUrl}' alt='Cleaner photo' style='width:100px; height:100px; border-radius:50%; object-fit:cover;' />
+      <p><strong>Cleaner:</strong> {booking.AssignedCleaner.User.FullName}</p>
+    </td>
+  </tr>
+</table>
+
+<p>Status: <strong>{booking.BookingStatus}</strong></p>
+<p>We hope you're ready for a spotless experience!</p>
+"
 
                 });
             }

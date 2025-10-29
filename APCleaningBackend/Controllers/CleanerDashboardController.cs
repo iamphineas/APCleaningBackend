@@ -45,6 +45,14 @@ namespace APCleaningBackend.Controllers
                                   on dd.UserId equals du.Id into driverUserJoin
                                   from du in driverUserJoin.DefaultIfEmpty()
 
+                                  join cd in _context.CleanerDetails
+                                  on b.AssignedCleanerID equals cd.CleanerDetailsID into cleanerJoin
+                                  from cd in cleanerJoin.DefaultIfEmpty()
+
+                                  join cu in _context.Users
+                                  on cd.UserId equals cu.Id into cleanerUserJoin
+                                  from cu in cleanerUserJoin.DefaultIfEmpty()
+
                                   where b.AssignedCleanerID == cleaner.CleanerDetailsID
                                   orderby b.ServiceDate descending
 
@@ -59,7 +67,10 @@ namespace APCleaningBackend.Controllers
                                       b.City,
                                       b.Province,
                                       ServiceName = st.Name,
-                                      DriverName = du.FullName
+                                      DriverName = du.FullName,
+                                      DriverImageUrl = dd.DriverImageUrl,
+                                      CleanerName = cu.FullName,
+                                      CleanerImageUrl = cd.CleanerImageUrl
                                   }).ToListAsync();
 
             return Ok(bookings);

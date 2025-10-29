@@ -47,6 +47,14 @@ namespace APCleaningBackend.Controllers
                                   on cd.UserId equals cu.Id into cleanerUserJoin
                                   from cu in cleanerUserJoin.DefaultIfEmpty()
 
+                                  join dd in _context.DriverDetails
+                                  on b.AssignedDriverID equals dd.DriverDetailsID into driverJoin
+                                  from dd in driverJoin.DefaultIfEmpty()
+
+                                  join du in _context.Users
+                                  on dd.UserId equals du.Id into driverUserJoin
+                                  from du in driverUserJoin.DefaultIfEmpty()
+
                                   where b.AssignedDriverID == driver.DriverDetailsID
                                   orderby b.ServiceDate descending
 
@@ -62,7 +70,10 @@ namespace APCleaningBackend.Controllers
                                       b.Province,
                                       ServiceName = st.Name,
                                       CleanerName = cu.FullName,
-                                      AssignedDriverID = b.AssignedDriverID // Added for frontend dispatch note
+                                      CleanerImageUrl = cd.CleanerImageUrl,
+                                      DriverName = du.FullName,
+                                      DriverImageUrl = dd.DriverImageUrl,
+                                      AssignedDriverID = b.AssignedDriverID
                                   }).ToListAsync();
 
             return Ok(bookings);
@@ -159,7 +170,13 @@ namespace APCleaningBackend.Controllers
             var driver = await _context.DriverDetails.FirstOrDefaultAsync(d => d.UserId == userId);
             if (driver == null) return NotFound();
 
-            var booking = await _context.Booking.Include(b => b.ServiceType).FirstOrDefaultAsync(b => b.BookingID == id);
+            var booking = await _context.Booking
+    .Include(b => b.ServiceType)
+    .Include(b => b.AssignedDriver)
+        .ThenInclude(d => d.User)
+    .Include(b => b.AssignedCleaner)
+        .ThenInclude(c => c.User)
+    .FirstOrDefaultAsync(b => b.BookingID == id);
             if (booking == null || booking.AssignedDriverID != driver.DriverDetailsID)
                 return Unauthorized();
 
