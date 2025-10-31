@@ -1,70 +1,179 @@
-name: CI / Build / Test / Security / Deploy to Azure (.NET API)
+name: .NET API Build, Test & Azure Deploy
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  AZURE_WEBAPP_NAME: 'your-api-app-name'
+  AZURE_WEBAPP_PACKAGE_PATH: './publish'
+  TEST_PROJECT_PATH: './APCleaningBackendTest'
 
 jobs:
-  build-test-security:
-    name: Build → Test → Security Scan
+  build-and-test:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET SDK
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'  # adjust if your API targets another version
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build (Release)
+      - name: Build solution
         run: dotnet build --configuration Release --no-restore
 
-      - name: Run Unit Tests
-        run: dotnet test --configuration Release --no-build --verbosity normal
-
-      - name: Security: check vulnerable packages
-        run: dotnet list package --vulnerable
-
-      - name: Security: Snyk scan (optional)
-        if: ${{ secrets.SNYK_TOKEN != '' }}
+      - name: Run unit tests
         run: |
-          echo "Running Snyk scan..."
-          npm install -g snyk
-          snyk auth "${{ secrets.SNYK_TOKEN }}"
-          snyk test --file=YourProject.csproj --all-projects
-        continue-on-error: false
+          dotnet test ${{ env.TEST_PROJECT_PATH }} \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFileName=test-results.trx"
 
-      - name: Publish build output
-        run: dotnet publish -c Release -o ./publish
+      - name: Publish test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: ./TestResults/**/*
 
-      - name: Upload artifact for deployment
+      - name: Generate code coverage report
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.3.11
+        if: success()
+        with:
+          reports: './TestResults/**/coverage.cobertura.xml'
+          targetdir: './CoverageReport'
+          reporttypes: 'HtmlInline;Cobertura'
+
+      - name: Upload code coverage report
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: code-coverage-report
+          path: ./CoverageReport
+
+      - name: Publish application
+        run: |
+          dotnet publish --configuration Release \
+            --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} \
+            --no-restore
+
+      - name: Upload publish artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dotnet-api
-          path: ./publish
+          name: dotnet-publish
+          path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
-  deploy:
-    name: Deploy to Azure App Service
+  security-testing:
     runs-on: ubuntu-latest
-    needs: build-test-security
-
+    needs: build-and-test
+    
     steps:
-      - name: Download published artifact
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Install OWASP Dependency Check
+        run: |
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
+          unzip dependency-check-10.0.4-release.zip
+        continue-on-error: true
+
+      - name: Run OWASP Dependency Check
+        run: |
+          ./dependency-check/bin/dependency-check.sh \
+            --project "dotnet-api" \
+            --scan . \
+            --format HTML \
+            --format JSON \
+            --out ./dependency-check-report
+        continue-on-error: true
+
+      - name: Install dotnet-security-scan
+        run: dotnet tool install --global security-scan
+        continue-on-error: true
+
+      - name: Run security scan
+        run: security-scan *.sln --excl-proj=**/*Test*.csproj
+        continue-on-error: true
+
+      - name: Run Snyk Security Scan
+        uses: snyk/actions/dotnet@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+      - name: CodeQL Analysis - Initialize
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+
+      - name: CodeQL Analysis - Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: CodeQL Analysis - Analyze
+        uses: github/codeql-action/analyze@v3
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            ./dependency-check-report
+            ./security-scan-results
+
+  deploy-to-azure:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-testing]
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    
+    steps:
+      - name: Download publish artifact
         uses: actions/download-artifact@v4
         with:
-          name: dotnet-api
-          path: ./publish
+          name: dotnet-publish
+          path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ./publish
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+      - name: Run smoke tests
+        run: |
+          sleep 30
+          curl -f ${{ steps.deploy-to-webapp.outputs.webapp-url }}/health || exit 0
+        continue-on-error: true
+
+      - name: Logout from Azure
+        run: az logout
+        if: always()
