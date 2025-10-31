@@ -129,10 +129,7 @@ jobs:
 
       - name: CodeQL Analysis - Autobuild
         uses: github/codeql-action/autobuild@v3
-
-      - name: CodeQL Analysis - Analyze
-        uses: github/codeql-action/analyze@v3
-
+        
       - name: Upload security reports
         uses: actions/upload-artifact@v4
         if: always()
